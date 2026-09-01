@@ -34,7 +34,7 @@ export function Login() {
         <p className="text-[11px] font-semibold uppercase tracking-wider text-gold-100">
           Corpo de Bombeiros Militar do Rio Grande do Sul
         </p>
-        <h1 className="text-lg font-bold text-white">CautelasB4</h1>
+        <h1 className="text-lg font-bold text-white">Sistema Online para B4</h1>
       </div>
       <div className="p-6">
         <p className="mb-4 text-sm text-slate-500">Controle de Materiais e Cautelas</p>

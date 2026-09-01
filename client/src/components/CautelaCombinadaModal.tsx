@@ -3,6 +3,7 @@ import { api, apiErrorMessage } from "../api/client";
 import { Estoque, Item } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { Modal } from "./Modal";
+import { ItemPickerModal } from "./ItemPickerModal";
 
 interface Row {
   itemId: string;
@@ -23,6 +24,7 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
   const [retiradoPorTelefone, setRetiradoPorTelefone] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [pickingRow, setPickingRow] = useState<number | null>(null);
 
   useEffect(() => {
     api.get<Item[]>("/items").then((res) => setItems(res.data.filter((i) => i.quantityAvailable > 0)));
@@ -110,19 +112,27 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
             const selectedItem = itemsInEstoque.find((i) => i.id === row.itemId);
             return (
               <div key={index} className="flex items-center gap-2">
-                <select
-                  required
-                  value={row.itemId}
-                  onChange={(e) => updateRow(index, { itemId: e.target.value })}
-                  className="flex-1 rounded-md border border-slate-300 px-2 py-2 text-sm"
+                <button
+                  type="button"
+                  onClick={() => setPickingRow(index)}
+                  className="flex flex-1 items-center gap-2 rounded-md border border-slate-300 px-2 py-1.5 text-left text-sm hover:border-brand-400"
                 >
-                  <option value="">Selecione um item...</option>
-                  {availableOptionsFor(index).map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {i.name} (disp: {i.quantityAvailable})
-                    </option>
-                  ))}
-                </select>
+                  <span className="h-9 w-9 shrink-0 overflow-hidden rounded bg-slate-100">
+                    {selectedItem?.photo ? (
+                      <img src={selectedItem.photo} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-slate-300">📦</span>
+                    )}
+                  </span>
+                  {selectedItem ? (
+                    <span className="flex flex-col leading-tight">
+                      <span className="font-medium text-slate-800">{selectedItem.name}</span>
+                      <span className="text-xs text-slate-400">disp: {selectedItem.quantityAvailable}</span>
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">Selecione um item...</span>
+                  )}
+                </button>
                 <input
                   type="number"
                   min={1}
@@ -202,6 +212,17 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
           {saving ? "Salvando..." : "Confirmar cautela combinada"}
         </button>
       </form>
+
+      {pickingRow !== null && (
+        <ItemPickerModal
+          items={availableOptionsFor(pickingRow)}
+          onSelect={(item) => {
+            updateRow(pickingRow, { itemId: item.id });
+            setPickingRow(null);
+          }}
+          onClose={() => setPickingRow(null)}
+        />
+      )}
     </Modal>
   );
 }

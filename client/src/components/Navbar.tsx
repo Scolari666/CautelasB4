@@ -22,7 +22,7 @@ export function Navbar() {
             <img src="/logo-cbmrs.png" alt="Brasão CBMRS" className="h-10 w-10 rounded-md shadow ring-1 ring-white/30" />
             <div className="leading-tight">
               <p className="text-sm font-bold uppercase tracking-wide text-white">CBMRS</p>
-              <p className="text-[11px] text-gold-100">Cautelas B4</p>
+              <p className="text-[11px] text-gold-100">Sistema Online para B4</p>
             </div>
           </div>
 
