@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, AuthedRequest } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
+import { generateCautelaPdf } from "../lib/cautelaPdf";
 
 export const cautelasRouter = Router();
 
@@ -63,6 +64,22 @@ cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
 
   emitStockUpdate();
   res.status(201).json(cautela);
+});
+
+cautelasRouter.get("/:id/pdf", requireAuth, async (req: AuthedRequest, res) => {
+  const cautela = await prisma.cautela.findUnique({
+    where: { id: req.params.id },
+    include: { item: true, user: true },
+  });
+  if (!cautela) return res.status(404).json({ error: "Cautela não encontrada" });
+  if (cautela.userId !== req.user!.userId && req.user!.role !== "ADMIN") {
+    return res.status(403).json({ error: "Apenas o responsável ou um administrador pode baixar este documento" });
+  }
+
+  const pdfBytes = await generateCautelaPdf(cautela);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="cautela-${cautela.id}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
 });
 
 cautelasRouter.post("/:id/devolver", requireAuth, async (req: AuthedRequest, res) => {

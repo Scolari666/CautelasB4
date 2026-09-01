@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, apiErrorMessage } from "../api/client";
 import { Cautela } from "../types";
 import { useStockSocket } from "../hooks/useStockSocket";
+import { downloadCautelaPdf } from "../utils/downloadCautelaPdf";
 
 export function MinhasCautelas() {
   const [cautelas, setCautelas] = useState<Cautela[]>([]);
@@ -53,12 +54,20 @@ export function MinhasCautelas() {
                     {c.purpose ? ` · ${c.purpose}` : ""}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleDevolver(c.id)}
-                  className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                >
-                  Devolver
-                </button>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    onClick={() => downloadCautelaPdf(c.id)}
+                    className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                  >
+                    PDF
+                  </button>
+                  <button
+                    onClick={() => handleDevolver(c.id)}
+                    className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    Devolver
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -72,12 +81,20 @@ export function MinhasCautelas() {
         ) : (
           <ul className="flex flex-col gap-2">
             {devolvidas.map((c) => (
-              <li key={c.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
-                <Link to={`/itens/${c.itemId}`} className="font-medium text-brand-600">
-                  {c.item.name}
-                </Link>{" "}
-                — {c.quantity} un., devolvido em{" "}
-                {c.returnedAt ? new Date(c.returnedAt).toLocaleDateString("pt-BR") : "-"}
+              <li key={c.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                <span>
+                  <Link to={`/itens/${c.itemId}`} className="font-medium text-brand-600">
+                    {c.item.name}
+                  </Link>{" "}
+                  — {c.quantity} un., devolvido em{" "}
+                  {c.returnedAt ? new Date(c.returnedAt).toLocaleDateString("pt-BR") : "-"}
+                </span>
+                <button
+                  onClick={() => downloadCautelaPdf(c.id)}
+                  className="shrink-0 rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                >
+                  PDF
+                </button>
               </li>
             ))}
           </ul>

@@ -7,6 +7,7 @@ import { Modal } from "../components/Modal";
 import { PhotoInput } from "../components/PhotoInput";
 import { useAuth } from "../context/AuthContext";
 import { useStockSocket } from "../hooks/useStockSocket";
+import { downloadCautelaPdf } from "../utils/downloadCautelaPdf";
 
 export function ItemDetail() {
   const { id } = useParams<{ id: string }>();
@@ -135,12 +136,20 @@ export function ItemDetail() {
                   </p>
                 </div>
                 {(user?.role === "ADMIN" || user?.id === c.userId) && (
-                  <button
-                    onClick={() => handleDevolver(c.id)}
-                    className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                  >
-                    Devolver
-                  </button>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      onClick={() => downloadCautelaPdf(c.id)}
+                      className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => handleDevolver(c.id)}
+                      className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                    >
+                      Devolver
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
