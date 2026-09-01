@@ -98,6 +98,9 @@ export function Navbar() {
               <NavLink to="/admin/usuarios" className={linkClass} onClick={close}>
                 Usuários
               </NavLink>
+              <NavLink to="/admin/importar" className={linkClass} onClick={close}>
+                Importar materiais
+              </NavLink>
             </>
           )}
 

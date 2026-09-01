@@ -12,6 +12,7 @@ import { MissoesPedidos } from "./pages/MissoesPedidos";
 import { AdminCategorias } from "./pages/AdminCategorias";
 import { AdminEstoques } from "./pages/AdminEstoques";
 import { AdminUsuarios } from "./pages/AdminUsuarios";
+import { AdminImportar } from "./pages/AdminImportar";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -116,6 +117,14 @@ export default function App() {
             element={
               <AdminRoute>
                 <AdminEstoques />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/importar"
+            element={
+              <AdminRoute>
+                <AdminImportar />
               </AdminRoute>
             }
           />
