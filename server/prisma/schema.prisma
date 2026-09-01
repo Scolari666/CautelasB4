@@ -59,25 +59,32 @@ model Item {
   quantityUnavailable Int       @default(0)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
-  cautelas            Cautela[]
+  cautelaItems        CautelaItem[]
 }
 
 model Cautela {
-  id               String        @id @default(cuid())
-  itemId           String
-  item             Item          @relation(fields: [itemId], references: [id])
-  userId           String
-  user             User          @relation(fields: [userId], references: [id])
-  quantity         Int
-  status           CautelaStatus @default(ATIVA)
-  purpose          String?
-  takenAt          DateTime      @default(now())
-  expectedReturnAt DateTime?
-  returnedAt       DateTime?
-  returnNotes      String?
-  groupId          String?
+  id                  String        @id @default(cuid())
+  userId              String
+  user                User          @relation(fields: [userId], references: [id])
+  purpose             String?
+  takenAt             DateTime      @default(now())
+  expectedReturnAt    DateTime?
   retiradoPorNome     String?
   retiradoPorTelefone String?
+  items               CautelaItem[]
+}
 
-  @@index([groupId])
+model CautelaItem {
+  id          String        @id @default(cuid())
+  cautelaId   String
+  cautela     Cautela       @relation(fields: [cautelaId], references: [id], onDelete: Cascade)
+  itemId      String
+  item        Item          @relation(fields: [itemId], references: [id])
+  quantity    Int
+  status      CautelaStatus @default(ATIVA)
+  returnedAt  DateTime?
+  returnNotes String?
+
+  @@index([cautelaId])
+  @@index([itemId])
 }

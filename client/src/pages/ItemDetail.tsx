@@ -41,9 +41,9 @@ export function ItemDetail() {
     }
   }
 
-  async function handleDevolver(cautelaId: string) {
+  async function handleDevolver(cautelaItemId: string) {
     try {
-      await api.post(`/cautelas/${cautelaId}/devolver`, {});
+      await api.post(`/cautelas/items/${cautelaItemId}/devolver`, {});
       load();
     } catch (err) {
       setError(apiErrorMessage(err, "Não foi possível devolver"));
@@ -52,8 +52,8 @@ export function ItemDetail() {
 
   if (!item) return <p className="text-slate-500">Carregando...</p>;
 
-  const activeCautelas = item.cautelas?.filter((c) => c.status === "ATIVA") ?? [];
-  const history = item.cautelas?.filter((c) => c.status === "DEVOLVIDA") ?? [];
+  const activeCautelas = item.cautelaItems?.filter((ci) => ci.status === "ATIVA") ?? [];
+  const history = item.cautelaItems?.filter((ci) => ci.status === "DEVOLVIDA") ?? [];
 
   return (
     <div>
@@ -126,35 +126,39 @@ export function ItemDetail() {
           <p className="text-sm text-slate-500">Nenhuma cautela ativa para este item.</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {activeCautelas.map((c) => (
-              <li key={c.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-sm">
-                <div>
-                  <p className="font-medium text-slate-800">
-                    {c.user.name} {c.user.matricula ? `(${c.user.matricula})` : ""} — {c.quantity} un.
-                  </p>
-                  <p className="text-slate-500">
-                    Desde {new Date(c.takenAt).toLocaleDateString("pt-BR")}
-                    {c.purpose ? ` · ${c.purpose}` : ""}
-                  </p>
-                </div>
-                {(user?.role === "ADMIN" || user?.id === c.userId) && (
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      onClick={() => downloadCautelaPdf(c.id)}
-                      className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                    >
-                      PDF
-                    </button>
-                    <button
-                      onClick={() => handleDevolver(c.id)}
-                      className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                    >
-                      Devolver
-                    </button>
+            {activeCautelas.map((ci) => {
+              const cautela = ci.cautela!;
+              return (
+                <li key={ci.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-sm">
+                  <div>
+                    <p className="font-medium text-slate-800">
+                      {cautela.retiradoPorNome || cautela.user.name}{" "}
+                      {cautela.user.matricula ? `(${cautela.user.matricula})` : ""} — {ci.quantity} un.
+                    </p>
+                    <p className="text-slate-500">
+                      Desde {new Date(cautela.takenAt).toLocaleDateString("pt-BR")}
+                      {cautela.purpose ? ` · ${cautela.purpose}` : ""}
+                    </p>
                   </div>
-                )}
-              </li>
-            ))}
+                  {(user?.role === "ADMIN" || user?.id === cautela.userId) && (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        onClick={() => downloadCautelaPdf(cautela.id)}
+                        className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                      >
+                        PDF
+                      </button>
+                      <button
+                        onClick={() => handleDevolver(ci.id)}
+                        className="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                      >
+                        Devolver
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -163,10 +167,11 @@ export function ItemDetail() {
         <section className="mt-8">
           <h2 className="mb-2 font-semibold text-slate-800">Histórico</h2>
           <ul className="flex flex-col gap-2">
-            {history.map((c) => (
-              <li key={c.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
-                {c.user.name} cautelou {c.quantity} un. em {new Date(c.takenAt).toLocaleDateString("pt-BR")} e devolveu em{" "}
-                {c.returnedAt ? new Date(c.returnedAt).toLocaleDateString("pt-BR") : "-"}
+            {history.map((ci) => (
+              <li key={ci.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                {ci.cautela!.retiradoPorNome || ci.cautela!.user.name} cautelou {ci.quantity} un. em{" "}
+                {new Date(ci.cautela!.takenAt).toLocaleDateString("pt-BR")} e devolveu em{" "}
+                {ci.returnedAt ? new Date(ci.returnedAt).toLocaleDateString("pt-BR") : "-"}
               </li>
             ))}
           </ul>
@@ -196,8 +201,7 @@ function CautelarModal({ item, onClose, onDone }: { item: Item; onClose: () => v
     setError("");
     try {
       await api.post("/cautelas", {
-        itemId: item.id,
-        quantity,
+        items: [{ itemId: item.id, quantity }],
         purpose,
         expectedReturnAt: expectedReturnAt || undefined,
         retiradoPorNome: retiradoPorNome || undefined,

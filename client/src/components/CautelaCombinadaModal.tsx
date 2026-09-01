@@ -62,7 +62,7 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
     }
     setSaving(true);
     try {
-      await api.post("/cautelas/batch", {
+      await api.post("/cautelas", {
         items: valid.map((r) => ({ itemId: r.itemId, quantity: r.quantity })),
         purpose,
         expectedReturnAt: expectedReturnAt || undefined,

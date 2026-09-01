@@ -37,23 +37,29 @@ export interface Item {
   quantityAvailable: number;
   quantityCheckedOut: number;
   quantityUnavailable: number;
-  cautelas?: Cautela[];
+  cautelaItems?: CautelaItem[];
+}
+
+export interface CautelaItem {
+  id: string;
+  cautelaId: string;
+  itemId: string;
+  item: Item;
+  quantity: number;
+  status: CautelaStatus;
+  returnedAt?: string | null;
+  returnNotes?: string | null;
+  cautela?: Cautela;
 }
 
 export interface Cautela {
   id: string;
-  itemId: string;
-  item: Item;
   userId: string;
   user: { id: string; name: string; matricula?: string | null };
-  quantity: number;
-  status: CautelaStatus;
   purpose?: string | null;
   takenAt: string;
   expectedReturnAt?: string | null;
-  returnedAt?: string | null;
-  returnNotes?: string | null;
-  groupId?: string | null;
   retiradoPorNome?: string | null;
   retiradoPorTelefone?: string | null;
+  items: CautelaItem[];
 }

@@ -24,9 +24,11 @@ itemsRouter.get("/:id", requireAuth, async (req, res) => {
     include: {
       category: true,
       estoque: true,
-      cautelas: {
-        orderBy: { takenAt: "desc" },
-        include: { user: { select: { id: true, name: true, matricula: true } } },
+      cautelaItems: {
+        orderBy: { cautela: { takenAt: "desc" } },
+        include: {
+          cautela: { include: { user: { select: { id: true, name: true, matricula: true } } } },
+        },
       },
     },
   });
