@@ -65,4 +65,7 @@ model Cautela {
   expectedReturnAt DateTime?
   returnedAt       DateTime?
   returnNotes      String?
+  groupId          String?
+
+  @@index([groupId])
 }

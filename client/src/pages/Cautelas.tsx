@@ -5,12 +5,14 @@ import { Cautela } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { useStockSocket } from "../hooks/useStockSocket";
 import { downloadCautelaPdf } from "../utils/downloadCautelaPdf";
+import { CautelaCombinadaModal } from "../components/CautelaCombinadaModal";
 
 export function Cautelas() {
   const { user } = useAuth();
   const [cautelas, setCautelas] = useState<Cautela[]>([]);
   const [statusFilter, setStatusFilter] = useState<"ATIVA" | "DEVOLVIDA" | "">("ATIVA");
   const [error, setError] = useState("");
+  const [showCombinada, setShowCombinada] = useState(false);
 
   const load = useCallback(async () => {
     const res = await api.get<Cautela[]>("/cautelas", { params: statusFilter ? { status: statusFilter } : {} });
@@ -36,15 +38,23 @@ export function Cautelas() {
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-bold text-slate-800">Cautelas</h1>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as "ATIVA" | "DEVOLVIDA" | "")}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        >
-          <option value="ATIVA">Ativas</option>
-          <option value="DEVOLVIDA">Devolvidas</option>
-          <option value="">Todas</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as "ATIVA" | "DEVOLVIDA" | "")}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="ATIVA">Ativas</option>
+            <option value="DEVOLVIDA">Devolvidas</option>
+            <option value="">Todas</option>
+          </select>
+          <button
+            onClick={() => setShowCombinada(true)}
+            className="rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800"
+          >
+            + Nova cautela combinada
+          </button>
+        </div>
       </div>
 
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
@@ -71,6 +81,11 @@ export function Cautelas() {
                     <Link to={`/itens/${c.itemId}`} className="font-medium text-brand-600">
                       {c.item.name}
                     </Link>
+                    {c.groupId && (
+                      <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                        combinada
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-2">
                     {c.user.name} {c.user.matricula ? `(${c.user.matricula})` : ""}
@@ -112,6 +127,8 @@ export function Cautelas() {
           </table>
         </div>
       )}
+
+      {showCombinada && <CautelaCombinadaModal onClose={() => setShowCombinada(false)} onDone={load} />}
     </div>
   );
 }

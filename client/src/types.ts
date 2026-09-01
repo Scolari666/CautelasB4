@@ -44,4 +44,5 @@ export interface Cautela {
   expectedReturnAt?: string | null;
   returnedAt?: string | null;
   returnNotes?: string | null;
+  groupId?: string | null;
 }
