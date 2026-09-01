@@ -1,12 +1,12 @@
 import { FormEvent, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { apiErrorMessage } from "../api/client";
 
 export function Login() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export function Login() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      await login(username, password);
       navigate("/");
     } catch (err) {
       setError(apiErrorMessage(err, "Não foi possível entrar"));
@@ -40,11 +40,11 @@ export function Login() {
         <p className="mb-4 text-sm text-slate-500">Controle de Materiais e Cautelas</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
-            type="email"
             required
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            autoFocus
+            placeholder="Usuário"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
           <input
@@ -64,11 +64,8 @@ export function Login() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-slate-500">
-          Não tem conta?{" "}
-          <Link to="/registrar" className="font-medium text-brand-700">
-            Cadastre-se
-          </Link>
+        <p className="mt-4 text-center text-xs text-slate-400">
+          Não tem acesso? Peça a um administrador para criar sua conta.
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api, apiErrorMessage } from "../api/client";
-import { User } from "../types";
+import { Role, User } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { Modal } from "../components/Modal";
 
@@ -8,7 +8,9 @@ export function AdminUsuarios() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState("");
+  const [showNew, setShowNew] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [resettingUser, setResettingUser] = useState<User | null>(null);
 
   const load = useCallback(async () => {
     const res = await api.get<User[]>("/users");
@@ -30,8 +32,16 @@ export function AdminUsuarios() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="mb-4 text-xl font-bold text-slate-800">Usuários</h1>
+    <div className="max-w-4xl">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-slate-800">Usuários</h1>
+        <button
+          onClick={() => setShowNew(true)}
+          className="rounded-md bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+        >
+          + Novo usuário
+        </button>
+      </div>
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -39,7 +49,7 @@ export function AdminUsuarios() {
           <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-2">Nome</th>
-              <th className="px-4 py-2">E-mail</th>
+              <th className="px-4 py-2">Usuário</th>
               <th className="px-4 py-2">Graduação</th>
               <th className="px-4 py-2">Matrícula</th>
               <th className="px-4 py-2">Papel</th>
@@ -50,7 +60,7 @@ export function AdminUsuarios() {
             {users.map((u) => (
               <tr key={u.id} className="border-t border-slate-100">
                 <td className="px-4 py-2 font-medium text-slate-800">{u.name}</td>
-                <td className="px-4 py-2">{u.email}</td>
+                <td className="px-4 py-2 text-slate-600">{u.username}</td>
                 <td className="px-4 py-2">{u.graduacao ?? "-"}</td>
                 <td className="px-4 py-2">{u.matricula ?? "-"}</td>
                 <td className="px-4 py-2">
@@ -63,9 +73,12 @@ export function AdminUsuarios() {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-wrap justify-end gap-3">
                     <button onClick={() => setEditingUser(u)} className="text-xs font-semibold text-slate-600">
                       Editar
+                    </button>
+                    <button onClick={() => setResettingUser(u)} className="text-xs font-semibold text-slate-600">
+                      Redefinir senha
                     </button>
                     <button
                       onClick={() => toggleRole(u)}
@@ -82,16 +95,120 @@ export function AdminUsuarios() {
         </table>
       </div>
 
+      {showNew && <NewUserModal onClose={() => setShowNew(false)} onSaved={load} />}
       {editingUser && (
         <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSaved={load} />
+      )}
+      {resettingUser && (
+        <ResetPasswordModal user={resettingUser} onClose={() => setResettingUser(null)} />
       )}
     </div>
   );
 }
 
+function NewUserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [graduacao, setGraduacao] = useState("");
+  const [matricula, setMatricula] = useState("");
+  const [role, setRole] = useState<Role>("USER");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await api.post("/users", { name, username, password, email, graduacao, matricula, role });
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Não foi possível criar o usuário"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal title="Novo usuário" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <input
+          required
+          placeholder="Nome completo"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+        <div className="flex gap-3">
+          <input
+            required
+            placeholder="Usuário (login)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <input
+            type="password"
+            required
+            minLength={6}
+            placeholder="Senha (mín. 6 caracteres)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <input
+          type="email"
+          placeholder="E-mail (opcional)"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+        <div className="flex gap-3">
+          <input
+            placeholder="Graduação"
+            value={graduacao}
+            onChange={(e) => setGraduacao(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Matrícula"
+            value={matricula}
+            onChange={(e) => setMatricula(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <label className="text-sm text-slate-600">
+          Papel
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value as Role)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="USER">Usuário</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+        </label>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
+        >
+          {saving ? "Criando..." : "Criar usuário"}
+        </button>
+      </form>
+    </Modal>
+  );
+}
+
 function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+  const [username, setUsername] = useState(user.username);
+  const [email, setEmail] = useState(user.email ?? "");
   const [graduacao, setGraduacao] = useState(user.graduacao ?? "");
   const [matricula, setMatricula] = useState(user.matricula ?? "");
   const [error, setError] = useState("");
@@ -102,7 +219,7 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
     setSaving(true);
     setError("");
     try {
-      await api.patch(`/users/${user.id}`, { name, email, graduacao, matricula });
+      await api.patch(`/users/${user.id}`, { name, username, email, graduacao, matricula });
       onSaved();
       onClose();
     } catch (err) {
@@ -123,9 +240,15 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
           className="rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
         <input
-          type="email"
           required
-          placeholder="E-mail"
+          placeholder="Usuário (login)"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        />
+        <input
+          type="email"
+          placeholder="E-mail (opcional)"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -153,6 +276,55 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
           {saving ? "Salvando..." : "Salvar alterações"}
         </button>
       </form>
+    </Modal>
+  );
+}
+
+function ResetPasswordModal({ user, onClose }: { user: User; onClose: () => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await api.patch(`/users/${user.id}/password`, { password });
+      setDone(true);
+    } catch (err) {
+      setError(apiErrorMessage(err, "Não foi possível redefinir a senha"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal title={`Redefinir senha de ${user.name}`} onClose={onClose}>
+      {done ? (
+        <p className="text-sm text-emerald-700">Senha redefinida com sucesso.</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <input
+            type="password"
+            required
+            minLength={6}
+            placeholder="Nova senha (mín. 6 caracteres)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-md bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
+          >
+            {saving ? "Salvando..." : "Redefinir senha"}
+          </button>
+        </form>
+      )}
     </Modal>
   );
 }

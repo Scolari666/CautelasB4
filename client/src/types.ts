@@ -4,7 +4,8 @@ export type CautelaStatus = "ATIVA" | "DEVOLVIDA";
 export interface User {
   id: string;
   name: string;
-  email: string;
+  username: string;
+  email?: string | null;
   matricula?: string | null;
   graduacao?: string | null;
   role: Role;

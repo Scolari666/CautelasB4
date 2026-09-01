@@ -20,9 +20,10 @@ enum CautelaStatus {
 model User {
   id           String    @id @default(cuid())
   name         String
+  username     String    @unique
   matricula    String?
   graduacao    String?
-  email        String    @unique
+  email        String?   @unique
   passwordHash String
   role         Role      @default(USER)
   createdAt    DateTime  @default(now())

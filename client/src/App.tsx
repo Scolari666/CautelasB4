@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { Navbar } from "./components/Navbar";
 import { Login } from "./pages/Login";
-import { Register } from "./pages/Register";
 import { Estoque } from "./pages/Estoque";
 import { ItemDetail } from "./pages/ItemDetail";
 import { Cautelas } from "./pages/Cautelas";
@@ -37,7 +36,6 @@ export default function App() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/registrar" element={<Register />} />
           <Route
             path="/"
             element={
