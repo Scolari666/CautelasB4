@@ -20,7 +20,7 @@ export function Navbar() {
             <p className="text-[11px] text-gold-100">Cautelas B4</p>
           </div>
           <NavLink to="/" end className={linkClass}>
-            Estoque
+            Materiais
           </NavLink>
           <NavLink to="/cautelas" className={linkClass}>
             Cautelas

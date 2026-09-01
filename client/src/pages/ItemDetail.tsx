@@ -32,7 +32,7 @@ export function ItemDetail() {
   useStockSocket(load);
 
   async function handleDelete() {
-    if (!item || !confirm(`Remover "${item.name}" do estoque?`)) return;
+    if (!item || !confirm(`Remover "${item.name}" dos materiais?`)) return;
     try {
       await api.delete(`/items/${item.id}`);
       navigate("/");
@@ -58,7 +58,7 @@ export function ItemDetail() {
   return (
     <div>
       <button onClick={() => navigate("/")} className="mb-4 text-sm text-brand-600">
-        ← Voltar ao estoque
+        ← Voltar aos materiais
       </button>
 
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">

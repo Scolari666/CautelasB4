@@ -54,7 +54,7 @@ export function Estoque() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-slate-800">Estoque</h1>
+        <h1 className="text-xl font-bold text-slate-800">Materiais</h1>
         {user?.role === "ADMIN" && (
           <button
             onClick={() => setShowNew(true)}
@@ -105,7 +105,7 @@ export function Estoque() {
       </div>
 
       {loading ? (
-        <p className="text-slate-500">Carregando estoque...</p>
+        <p className="text-slate-500">Carregando materiais...</p>
       ) : filtered.length === 0 ? (
         <p className="text-slate-500">Nenhum item encontrado.</p>
       ) : (
@@ -221,7 +221,7 @@ function NewItemModal({
           </select>
         </div>
         <label className="text-sm text-slate-600">
-          Quantidade em estoque
+          Quantidade total
           <input
             type="number"
             min={0}
