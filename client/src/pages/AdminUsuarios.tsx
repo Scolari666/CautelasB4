@@ -38,6 +38,7 @@ export function AdminUsuarios() {
             <tr>
               <th className="px-4 py-2">Nome</th>
               <th className="px-4 py-2">E-mail</th>
+              <th className="px-4 py-2">Graduação</th>
               <th className="px-4 py-2">Matrícula</th>
               <th className="px-4 py-2">Papel</th>
               <th className="px-4 py-2"></th>
@@ -48,6 +49,7 @@ export function AdminUsuarios() {
               <tr key={u.id} className="border-t border-slate-100">
                 <td className="px-4 py-2 font-medium text-slate-800">{u.name}</td>
                 <td className="px-4 py-2">{u.email}</td>
+                <td className="px-4 py-2">{u.graduacao ?? "-"}</td>
                 <td className="px-4 py-2">{u.matricula ?? "-"}</td>
                 <td className="px-4 py-2">
                   <span

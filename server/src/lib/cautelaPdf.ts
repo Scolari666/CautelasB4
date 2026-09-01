@@ -77,5 +77,10 @@ export async function generateCautelaPdf(cautela: CautelaWithRelations): Promise
     writeText(formatDateBR(dataEntrega), 225, 544.5 - 1, 9);
   }
 
+  // MILITAR ESTADUAL QUE REALIZOU A ENTREGA DO MATERIAL — dados de quem criou a cautela
+  writeText(cautela.user.name, 197, 668.4 - 1, 9);
+  writeText(cautela.user.graduacao ?? "", 197, 679.9 - 1, 9);
+  writeText(cautela.user.matricula ?? "", 197, 691.4 - 1, 9);
+
   return pdfDoc.save();
 }

@@ -7,7 +7,7 @@ import { requireAuth, AuthedRequest } from "../middleware/auth";
 export const authRouter = Router();
 
 authRouter.post("/register", async (req, res) => {
-  const { name, email, password, matricula } = req.body ?? {};
+  const { name, email, password, matricula, graduacao } = req.body ?? {};
   if (!name || !email || !password) {
     return res.status(400).json({ error: "Nome, e-mail e senha são obrigatórios" });
   }
@@ -27,6 +27,7 @@ authRouter.post("/register", async (req, res) => {
       name,
       email,
       matricula,
+      graduacao,
       passwordHash,
       role: userCount === 0 ? "ADMIN" : "USER",
     },
@@ -35,7 +36,14 @@ authRouter.post("/register", async (req, res) => {
   const token = signToken({ userId: user.id, role: user.role });
   res.status(201).json({
     token,
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, matricula: user.matricula },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      matricula: user.matricula,
+      graduacao: user.graduacao,
+    },
   });
 });
 
@@ -58,12 +66,26 @@ authRouter.post("/login", async (req, res) => {
   const token = signToken({ userId: user.id, role: user.role });
   res.json({
     token,
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, matricula: user.matricula },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      matricula: user.matricula,
+      graduacao: user.graduacao,
+    },
   });
 });
 
 authRouter.get("/me", requireAuth, async (req: AuthedRequest, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
   if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
-  res.json({ id: user.id, name: user.name, email: user.email, role: user.role, matricula: user.matricula });
+  res.json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    matricula: user.matricula,
+    graduacao: user.graduacao,
+  });
 });

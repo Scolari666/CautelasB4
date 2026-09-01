@@ -6,6 +6,7 @@ export interface User {
   name: string;
   email: string;
   matricula?: string | null;
+  graduacao?: string | null;
   role: Role;
   createdAt?: string;
 }

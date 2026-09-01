@@ -8,6 +8,7 @@ export function Register() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [matricula, setMatricula] = useState("");
+  const [graduacao, setGraduacao] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,7 +21,7 @@ export function Register() {
     setError("");
     setLoading(true);
     try {
-      await register(name, email, password, matricula || undefined);
+      await register(name, email, password, matricula || undefined, graduacao || undefined);
       navigate("/");
     } catch (err) {
       setError(apiErrorMessage(err, "Não foi possível criar a conta"));
@@ -48,12 +49,20 @@ export function Register() {
             onChange={(e) => setName(e.target.value)}
             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
-          <input
-            placeholder="Matrícula / identificação (opcional)"
-            value={matricula}
-            onChange={(e) => setMatricula(e.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-          />
+          <div className="flex gap-3">
+            <input
+              placeholder="Graduação (opcional)"
+              value={graduacao}
+              onChange={(e) => setGraduacao(e.target.value)}
+              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+            <input
+              placeholder="Matrícula (opcional)"
+              value={matricula}
+              onChange={(e) => setMatricula(e.target.value)}
+              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            />
+          </div>
           <input
             type="email"
             required
