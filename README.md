@@ -25,7 +25,7 @@ Site para controle de estoque de materiais e cautelas (empréstimo de material p
    cd server
    cp .env.example .env   # preencha DATABASE_URL e JWT_SECRET
    npm install
-   npx prisma migrate dev --name init
+   npx prisma migrate deploy
    npm run dev             # http://localhost:4000
    ```
 
@@ -47,20 +47,19 @@ Site para controle de estoque de materiais e cautelas (empréstimo de material p
 
 ## Deploy (nuvem)
 
-O backend serve tanto a API (`/api/*`) quanto o build do frontend, então dá para publicar em um único serviço:
+O backend serve tanto a API (`/api/*`) quanto o build do frontend, então dá para publicar em um único serviço. O comando `npm start` já roda as migrations (`prisma migrate deploy`) antes de subir o servidor — não precisa de nenhum passo manual de banco após o primeiro deploy.
 
-1. **Banco de dados:** crie um Postgres gratuito no [Neon](https://neon.tech) ou [Supabase](https://supabase.com) e copie a connection string.
-2. **Serviço web:** crie um serviço Node no [Render](https://render.com) ou [Railway](https://railway.app) apontando para este repositório:
-   - Build command: `npm install && npm run build`
-   - Start command: `npm start`
-   - Variáveis de ambiente: `DATABASE_URL`, `JWT_SECRET`, `PORT` (geralmente definida automaticamente pela plataforma)
-3. Após o primeiro deploy, rode as migrations no banco de produção:
+1. **Banco de dados — crie um Postgres gratuito no [Neon](https://neon.tech)** (recomendado: o free tier do Neon não expira, diferente do Postgres gratuito do Render/Railway). Copie a *connection string* (Dashboard → Connect).
+2. **Serviço web — use o Blueprint pronto deste repositório:**
+   - No [Render](https://render.com), clique em **New +** → **Blueprint**.
+   - Conecte a conta do GitHub e selecione o repositório `Scolari666/CautelasB4` (branch com o código mais recente).
+   - Render vai ler o `render.yaml` da raiz do projeto e pedir o valor de `DATABASE_URL` — cole a connection string do Neon. O `JWT_SECRET` é gerado automaticamente.
+   - Clique em **Apply** e aguarde o build (alguns minutos).
+3. Acesse a URL pública gerada pelo Render (ex: `https://cautelasb4.onrender.com`) e entre com `scolari` / `scolarib4` — **troque essa senha assim que possível** em Usuários → Redefinir senha.
 
-   ```bash
-   npx prisma migrate deploy --schema server/prisma/schema.prisma
-   ```
-
-4. Acesse a URL pública do serviço — pronto, já dá pra usar de qualquer lugar.
+> Sem Blueprint: dá pra criar o serviço manualmente (New + → Web Service, mesmas configs: build `npm install && npm run build`, start `npm start`, env vars `DATABASE_URL` e `JWT_SECRET`). O `render.yaml` só automatiza esse passo.
+>
+> O plano gratuito do Render "dorme" após ~15 min sem acesso (o primeiro acesso depois disso demora uns 30-50s para acordar) — normal para uso interno; dá pra migrar para um plano pago depois se precisar de resposta imediata.
 
 ## Estrutura do projeto
 
