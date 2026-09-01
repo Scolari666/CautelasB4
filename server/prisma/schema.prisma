@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum CautelaStatus {
+  ATIVA
+  DEVOLVIDA
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  matricula    String?
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now())
+  cautelas     Cautela[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  items     Item[]
+}
+
+model Item {
+  id                  String    @id @default(cuid())
+  name                String
+  description         String?
+  photo               String?
+  categoryId          String
+  category            Category  @relation(fields: [categoryId], references: [id])
+  quantityTotal       Int       @default(0)
+  quantityAvailable   Int       @default(0)
+  quantityCheckedOut  Int       @default(0)
+  quantityUnavailable Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  cautelas            Cautela[]
+}
+
+model Cautela {
+  id               String        @id @default(cuid())
+  itemId           String
+  item             Item          @relation(fields: [itemId], references: [id])
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  quantity         Int
+  status           CautelaStatus @default(ATIVA)
+  purpose          String?
+  takenAt          DateTime      @default(now())
+  expectedReturnAt DateTime?
+  returnedAt       DateTime?
+  returnNotes      String?
+}
