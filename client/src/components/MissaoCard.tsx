@@ -4,17 +4,31 @@ import { Missao, MissaoStatus } from "../types";
 import { useAuth } from "../context/AuthContext";
 
 const STATUS_LABEL: Record<MissaoStatus, string> = {
-  PLANEJADA: "Planejada",
+  PLANEJADA: "Aguardando",
   EM_ANDAMENTO: "Em andamento",
-  CONCLUIDA: "Concluída",
+  CONCLUIDA: "Pronta",
   CANCELADA: "Cancelada",
 };
 
 const STATUS_TONE: Record<MissaoStatus, string> = {
-  PLANEJADA: "bg-slate-100 text-slate-600",
-  EM_ANDAMENTO: "bg-amber-100 text-amber-700",
+  PLANEJADA: "bg-amber-100 text-amber-800",
+  EM_ANDAMENTO: "bg-blue-100 text-blue-700",
   CONCLUIDA: "bg-emerald-100 text-emerald-700",
   CANCELADA: "bg-red-100 text-red-700",
+};
+
+const STATUS_BORDER: Record<MissaoStatus, string> = {
+  PLANEJADA: "border-l-amber-400",
+  EM_ANDAMENTO: "border-l-blue-400",
+  CONCLUIDA: "border-l-emerald-400",
+  CANCELADA: "border-l-red-400",
+};
+
+const STATUS_DOT: Record<MissaoStatus, string> = {
+  PLANEJADA: "bg-amber-500",
+  EM_ANDAMENTO: "bg-blue-500",
+  CONCLUIDA: "bg-emerald-500",
+  CANCELADA: "bg-red-500",
 };
 
 function formatDate(value?: string | null) {
@@ -51,27 +65,17 @@ export function MissaoCard({ missao, onChanged }: { missao: Missao; onChanged: (
   const period = [formatDate(missao.startAt), formatDate(missao.endAt)].filter(Boolean).join(" – ");
 
   return (
-    <div className={`rounded-xl border bg-white p-4 ${isMine ? "border-brand-300 ring-1 ring-brand-100" : "border-slate-200"}`}>
-      <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-slate-800">{missao.title}</h3>
-            {isMine && (
-              <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
-                atribuída a você
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-500">
-            {missao.assignedTo ? `${missao.assignedTo.name}${missao.assignedTo.pelotao ? ` · ${missao.assignedTo.pelotao}` : ""}` : "Sem atribuição específica"}
-            {period ? ` · ${period}` : ""}
-          </p>
-        </div>
+    <div
+      className={`rounded-xl border border-l-4 bg-white p-4 ${STATUS_BORDER[missao.status]} ${
+        isMine ? "border-brand-300 ring-1 ring-brand-100" : "border-slate-200"
+      }`}
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         {isAdmin ? (
           <select
             value={missao.status}
             onChange={(e) => handleStatusChange(e.target.value as MissaoStatus)}
-            className={`rounded-full border-0 px-2.5 py-1 text-xs font-medium ${STATUS_TONE[missao.status]}`}
+            className={`flex items-center gap-1.5 rounded-full border-0 px-3 py-1.5 text-sm font-bold ${STATUS_TONE[missao.status]}`}
           >
             {(Object.keys(STATUS_LABEL) as MissaoStatus[]).map((s) => (
               <option key={s} value={s}>
@@ -80,13 +84,25 @@ export function MissaoCard({ missao, onChanged }: { missao: Missao; onChanged: (
             ))}
           </select>
         ) : (
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[missao.status]}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold ${STATUS_TONE[missao.status]}`}>
+            <span className={`h-2 w-2 rounded-full ${STATUS_DOT[missao.status]}`} />
             {STATUS_LABEL[missao.status]}
+          </span>
+        )}
+        {isMine && (
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
+            atribuída a você
           </span>
         )}
       </div>
 
-      {missao.description && <p className="text-sm text-slate-600">{missao.description}</p>}
+      <h3 className="font-semibold text-slate-800">{missao.title}</h3>
+      <p className="text-xs text-slate-500">
+        {missao.assignedTo ? `${missao.assignedTo.name}${missao.assignedTo.pelotao ? ` · ${missao.assignedTo.pelotao}` : ""}` : "Sem atribuição específica"}
+        {period ? ` · ${period}` : ""}
+      </p>
+
+      {missao.description && <p className="mt-2 text-sm text-slate-600">{missao.description}</p>}
 
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
