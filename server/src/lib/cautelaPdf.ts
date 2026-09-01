@@ -62,6 +62,9 @@ export async function generateCautelaPdf(cautela: CautelaWithRelations): Promise
   const { dia, mes, ano } = formatDateParts(cautela.takenAt);
   writeText(`Porto Alegre, RS, ${dia} de ${mes} de ${ano}`, 290, 142.5, 9.5);
 
+  // AUTORIZAÇÃO DO CHEFE DA OPETA: campo "DATA:" (numérica, ex: 03/08/2007)
+  writeText(formatDateBR(cautela.takenAt), 130, 210.36 - 1, 9);
+
   // Remove resíduos pré-existentes no template (marcações soltas nas linhas 5 e 6 da tabela),
   // com margem para não apagar as linhas de grade da tabela
   eraseRegion(179, 351.9, 30, 364.2);
