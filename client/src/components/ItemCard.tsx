@@ -8,14 +8,16 @@ export function ItemCard({ item }: { item: Item }) {
       to={`/itens/${item.id}`}
       className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
     >
-      <div className="aspect-square w-full bg-slate-100">
-        {item.photo ? (
-          <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-slate-300">
-            <span className="text-4xl">📦</span>
-          </div>
-        )}
+      <div className="relative w-full bg-slate-100" style={{ paddingTop: "100%" }}>
+        <div className="absolute inset-0">
+          {item.photo ? (
+            <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-slate-300">
+              <span className="text-4xl">📦</span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div>

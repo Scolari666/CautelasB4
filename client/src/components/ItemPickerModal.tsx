@@ -54,7 +54,7 @@ export function ItemPickerModal({
         {filtered.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-400">Nenhum material encontrado.</p>
         ) : (
-          <div className="grid max-h-[50vh] grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {filtered.map((item) => (
               <button
                 key={item.id}
@@ -62,14 +62,16 @@ export function ItemPickerModal({
                 onClick={() => onSelect(item)}
                 className="flex flex-col overflow-hidden rounded-lg border border-slate-200 bg-white text-left transition hover:border-brand-400 hover:shadow-sm"
               >
-                <div className="aspect-square w-full bg-slate-100">
-                  {item.photo ? (
-                    <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-slate-300">
-                      <span className="text-2xl">📦</span>
-                    </div>
-                  )}
+                <div className="relative w-full bg-slate-100" style={{ paddingTop: "100%" }}>
+                  <div className="absolute inset-0">
+                    {item.photo ? (
+                      <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-slate-300">
+                        <span className="text-2xl">📦</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="p-2">
                   <p className="text-[10px] uppercase tracking-wide text-slate-400">{item.category.name}</p>

@@ -62,12 +62,14 @@ export function ItemDetail() {
       </button>
 
       <div className="grid gap-6 md:grid-cols-[280px_1fr]">
-        <div className="aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-          {item.photo ? (
-            <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-6xl text-slate-300">📦</div>
-          )}
+        <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100" style={{ paddingTop: "100%" }}>
+          <div className="absolute inset-0">
+            {item.photo ? (
+              <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-6xl text-slate-300">📦</div>
+            )}
+          </div>
         </div>
 
         <div>
