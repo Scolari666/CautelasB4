@@ -5,3 +5,13 @@
 body {
   @apply bg-stone-100 text-slate-900;
 }
+
+/* iOS Safari auto-zooms the page when a form field's font-size is below 16px on focus,
+   and often doesn't zoom back out — force 16px on mobile so it never triggers. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
