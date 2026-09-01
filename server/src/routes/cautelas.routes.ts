@@ -36,7 +36,7 @@ cautelasRouter.get("/minhas", requireAuth, async (req: AuthedRequest, res) => {
 });
 
 cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
-  const { itemId, quantity, purpose, expectedReturnAt } = req.body ?? {};
+  const { itemId, quantity, purpose, expectedReturnAt, retiradoPorNome, retiradoPorTelefone } = req.body ?? {};
   const qty = Number(quantity);
   if (!itemId || !Number.isFinite(qty) || qty <= 0) {
     return res.status(400).json({ error: "Item e quantidade válida são obrigatórios" });
@@ -56,6 +56,8 @@ cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
         quantity: qty,
         purpose: purpose?.trim() || null,
         expectedReturnAt: expectedReturnAt ? new Date(expectedReturnAt) : null,
+        retiradoPorNome: retiradoPorNome?.trim() || null,
+        retiradoPorTelefone: retiradoPorTelefone?.trim() || null,
       },
       include: { item: { include: { category: true } }, user: { select: { id: true, name: true, matricula: true } } },
     }),
@@ -70,7 +72,7 @@ cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
 });
 
 cautelasRouter.post("/batch", requireAuth, async (req: AuthedRequest, res) => {
-  const { items, purpose, expectedReturnAt } = req.body ?? {};
+  const { items, purpose, expectedReturnAt, retiradoPorNome, retiradoPorTelefone } = req.body ?? {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Informe ao menos um item" });
   }
@@ -108,6 +110,8 @@ cautelasRouter.post("/batch", requireAuth, async (req: AuthedRequest, res) => {
     userId: req.user!.userId,
     purpose: purpose?.trim() || null,
     expectedReturnAt: expectedReturnAt ? new Date(expectedReturnAt) : null,
+    retiradoPorNome: retiradoPorNome?.trim() || null,
+    retiradoPorTelefone: retiradoPorTelefone?.trim() || null,
     groupId,
   };
   const ops = parsed.flatMap((p) => [

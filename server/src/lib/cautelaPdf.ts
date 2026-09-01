@@ -76,8 +76,9 @@ export async function generateCautelaPdf(cautelas: CautelaWithRelations[]): Prom
     writeText(c.item.name, 183, rowBottom - 4, 9);
   });
 
-  // RETIRADO POR
-  writeText(primary.user.name, 225, 510.0 - 1, 9);
+  // RETIRADO POR (usa o nome/telefone informados na cautela, com o usuário como padrão)
+  writeText(primary.retiradoPorNome || primary.user.name, 225, 510.0 - 1, 9);
+  writeText(primary.retiradoPorTelefone ?? "", 225, 521.5 - 1, 9);
   const dataRetirada = formatDateBR(primary.takenAt);
   writeText(dataRetirada, 225, 533.0 - 1, 9);
   const allReturned = cautelas.every((c) => c.status === "DEVOLVIDA");

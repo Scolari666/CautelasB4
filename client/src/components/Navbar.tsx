@@ -33,6 +33,9 @@ export function Navbar() {
               <NavLink to="/admin/categorias" className={linkClass}>
                 Categorias
               </NavLink>
+              <NavLink to="/admin/estoques" className={linkClass}>
+                Estoques
+              </NavLink>
               <NavLink to="/admin/usuarios" className={linkClass}>
                 Usuários
               </NavLink>

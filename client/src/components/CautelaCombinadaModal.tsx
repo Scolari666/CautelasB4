@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, apiErrorMessage } from "../api/client";
-import { Item } from "../types";
+import { Estoque, Item } from "../types";
+import { useAuth } from "../context/AuthContext";
 import { Modal } from "./Modal";
 
 interface Row {
@@ -11,16 +12,27 @@ interface Row {
 const MAX_ROWS = 12;
 
 export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
+  const [estoques, setEstoques] = useState<Estoque[]>([]);
+  const [estoqueId, setEstoqueId] = useState("");
   const [rows, setRows] = useState<Row[]>([{ itemId: "", quantity: 1 }]);
   const [purpose, setPurpose] = useState("");
   const [expectedReturnAt, setExpectedReturnAt] = useState("");
+  const [retiradoPorNome, setRetiradoPorNome] = useState("");
+  const [retiradoPorTelefone, setRetiradoPorTelefone] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     api.get<Item[]>("/items").then((res) => setItems(res.data.filter((i) => i.quantityAvailable > 0)));
+    api.get<Estoque[]>("/estoques").then((res) => {
+      setEstoques(res.data);
+      setEstoqueId((prev) => prev || res.data[0]?.id || "");
+    });
   }, []);
+
+  const itemsInEstoque = items.filter((i) => !estoqueId || i.estoqueId === estoqueId);
 
   function updateRow(index: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
@@ -37,7 +49,7 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
 
   function availableOptionsFor(index: number) {
     const chosenElsewhere = new Set(rows.filter((_, i) => i !== index).map((r) => r.itemId));
-    return items.filter((i) => !chosenElsewhere.has(i.id) || i.id === rows[index].itemId);
+    return itemsInEstoque.filter((i) => !chosenElsewhere.has(i.id) || i.id === rows[index].itemId);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -54,6 +66,8 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
         items: valid.map((r) => ({ itemId: r.itemId, quantity: r.quantity })),
         purpose,
         expectedReturnAt: expectedReturnAt || undefined,
+        retiradoPorNome: retiradoPorNome || undefined,
+        retiradoPorTelefone: retiradoPorTelefone || undefined,
       });
       onDone();
       onClose();
@@ -71,9 +85,29 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
           Retire vários materiais de uma só vez — todos saem no mesmo documento de cautela.
         </p>
 
+        {estoques.length > 1 && (
+          <label className="text-sm text-slate-600">
+            Estoque
+            <select
+              value={estoqueId}
+              onChange={(e) => {
+                setEstoqueId(e.target.value);
+                setRows([{ itemId: "", quantity: 1 }]);
+              }}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            >
+              {estoques.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <div className="flex flex-col gap-2">
           {rows.map((row, index) => {
-            const selectedItem = items.find((i) => i.id === row.itemId);
+            const selectedItem = itemsInEstoque.find((i) => i.id === row.itemId);
             return (
               <div key={index} className="flex items-center gap-2">
                 <select
@@ -123,6 +157,23 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
           </button>
         )}
 
+        <label className="text-sm text-slate-600">
+          Nome de quem retirou (opcional)
+          <input
+            value={retiradoPorNome}
+            onChange={(e) => setRetiradoPorNome(e.target.value)}
+            placeholder={user?.name ?? "Padrão: seu nome"}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          Telefone de quem retirou (opcional)
+          <input
+            value={retiradoPorTelefone}
+            onChange={(e) => setRetiradoPorTelefone(e.target.value)}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
         <label className="text-sm text-slate-600">
           Finalidade (opcional)
           <input

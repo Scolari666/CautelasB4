@@ -8,6 +8,7 @@ import { ItemDetail } from "./pages/ItemDetail";
 import { Cautelas } from "./pages/Cautelas";
 import { MinhasCautelas } from "./pages/MinhasCautelas";
 import { AdminCategorias } from "./pages/AdminCategorias";
+import { AdminEstoques } from "./pages/AdminEstoques";
 import { AdminUsuarios } from "./pages/AdminUsuarios";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
@@ -82,6 +83,14 @@ export default function App() {
             element={
               <AdminRoute>
                 <AdminUsuarios />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/estoques"
+            element={
+              <AdminRoute>
+                <AdminEstoques />
               </AdminRoute>
             }
           />

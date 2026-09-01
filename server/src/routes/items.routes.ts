@@ -6,10 +6,13 @@ import { emitStockUpdate } from "../socket";
 export const itemsRouter = Router();
 
 itemsRouter.get("/", requireAuth, async (req, res) => {
-  const { categoryId } = req.query;
+  const { categoryId, estoqueId } = req.query;
   const items = await prisma.item.findMany({
-    where: categoryId ? { categoryId: String(categoryId) } : undefined,
-    include: { category: true },
+    where: {
+      categoryId: categoryId ? String(categoryId) : undefined,
+      estoqueId: estoqueId ? String(estoqueId) : undefined,
+    },
+    include: { category: true, estoque: true },
     orderBy: { name: "asc" },
   });
   res.json(items);
@@ -20,6 +23,7 @@ itemsRouter.get("/:id", requireAuth, async (req, res) => {
     where: { id: req.params.id },
     include: {
       category: true,
+      estoque: true,
       cautelas: {
         orderBy: { takenAt: "desc" },
         include: { user: { select: { id: true, name: true, matricula: true } } },
@@ -31,9 +35,9 @@ itemsRouter.get("/:id", requireAuth, async (req, res) => {
 });
 
 itemsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
-  const { name, description, photo, categoryId, quantityTotal } = req.body ?? {};
-  if (!name?.trim() || !categoryId || quantityTotal == null) {
-    return res.status(400).json({ error: "Nome, categoria e quantidade são obrigatórios" });
+  const { name, description, photo, categoryId, estoqueId, quantityTotal } = req.body ?? {};
+  if (!name?.trim() || !categoryId || !estoqueId || quantityTotal == null) {
+    return res.status(400).json({ error: "Nome, categoria, estoque e quantidade são obrigatórios" });
   }
   const qty = Number(quantityTotal);
   if (!Number.isFinite(qty) || qty < 0) {
@@ -46,17 +50,18 @@ itemsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
       description: description?.trim() || null,
       photo: photo || null,
       categoryId,
+      estoqueId,
       quantityTotal: qty,
       quantityAvailable: qty,
     },
-    include: { category: true },
+    include: { category: true, estoque: true },
   });
   emitStockUpdate();
   res.status(201).json(item);
 });
 
 itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
-  const { name, description, photo, categoryId, quantityTotal } = req.body ?? {};
+  const { name, description, photo, categoryId, estoqueId, quantityTotal } = req.body ?? {};
   const current = await prisma.item.findUnique({ where: { id: req.params.id } });
   if (!current) return res.status(404).json({ error: "Item não encontrado" });
 
@@ -65,6 +70,7 @@ itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   if (description !== undefined) data.description = description?.trim() || null;
   if (photo !== undefined) data.photo = photo || null;
   if (categoryId !== undefined) data.categoryId = categoryId;
+  if (estoqueId !== undefined) data.estoqueId = estoqueId;
 
   if (quantityTotal !== undefined) {
     const qty = Number(quantityTotal);
@@ -81,7 +87,7 @@ itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
     data.quantityAvailable = qty - committed;
   }
 
-  const item = await prisma.item.update({ where: { id: req.params.id }, data, include: { category: true } });
+  const item = await prisma.item.update({ where: { id: req.params.id }, data, include: { category: true, estoque: true } });
   emitStockUpdate();
   res.json(item);
 });
@@ -117,7 +123,7 @@ itemsRouter.patch("/:id/adjust", requireAuth, requireAdmin, async (req, res) => 
   const updated = await prisma.item.update({
     where: { id: req.params.id },
     data: { [from]: { decrement: qty }, [target]: { increment: qty } },
-    include: { category: true },
+    include: { category: true, estoque: true },
   });
   emitStockUpdate();
   res.json(updated);

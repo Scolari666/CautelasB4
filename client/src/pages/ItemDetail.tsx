@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, apiErrorMessage } from "../api/client";
-import { Category, Item } from "../types";
+import { Category, Estoque, Item } from "../types";
 import { StatusBadge } from "../components/StatusBadge";
 import { Modal } from "../components/Modal";
 import { PhotoInput } from "../components/PhotoInput";
@@ -71,7 +71,9 @@ export function ItemDetail() {
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">{item.category.name}</p>
+          <p className="text-xs uppercase tracking-wide text-slate-400">
+            {item.category.name} · {item.estoque.name}
+          </p>
           <h1 className="text-2xl font-bold text-slate-800">{item.name}</h1>
           {item.description && <p className="mt-1 text-slate-600">{item.description}</p>}
 
@@ -179,9 +181,12 @@ export function ItemDetail() {
 }
 
 function CautelarModal({ item, onClose, onDone }: { item: Item; onClose: () => void; onDone: () => void }) {
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [purpose, setPurpose] = useState("");
   const [expectedReturnAt, setExpectedReturnAt] = useState("");
+  const [retiradoPorNome, setRetiradoPorNome] = useState("");
+  const [retiradoPorTelefone, setRetiradoPorTelefone] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -195,6 +200,8 @@ function CautelarModal({ item, onClose, onDone }: { item: Item; onClose: () => v
         quantity,
         purpose,
         expectedReturnAt: expectedReturnAt || undefined,
+        retiradoPorNome: retiradoPorNome || undefined,
+        retiradoPorTelefone: retiradoPorTelefone || undefined,
       });
       onDone();
       onClose();
@@ -217,6 +224,23 @@ function CautelarModal({ item, onClose, onDone }: { item: Item; onClose: () => v
             required
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          Nome de quem retirou (opcional)
+          <input
+            value={retiradoPorNome}
+            onChange={(e) => setRetiradoPorNome(e.target.value)}
+            placeholder={user?.name ?? "Padrão: seu nome"}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          Telefone de quem retirou (opcional)
+          <input
+            value={retiradoPorTelefone}
+            onChange={(e) => setRetiradoPorTelefone(e.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
@@ -255,14 +279,17 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
   const [name, setName] = useState(item.name);
   const [description, setDescription] = useState(item.description ?? "");
   const [categoryId, setCategoryId] = useState(item.categoryId);
+  const [estoqueId, setEstoqueId] = useState(item.estoqueId);
   const [quantityTotal, setQuantityTotal] = useState(item.quantityTotal);
   const [photo, setPhoto] = useState<string | null>(item.photo ?? null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [estoques, setEstoques] = useState<Estoque[]>([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     api.get<Category[]>("/categories").then((res) => setCategories(res.data));
+    api.get<Estoque[]>("/estoques").then((res) => setEstoques(res.data));
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -270,7 +297,7 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
     setSaving(true);
     setError("");
     try {
-      await api.put(`/items/${item.id}`, { name, description, categoryId, quantityTotal, photo });
+      await api.put(`/items/${item.id}`, { name, description, categoryId, estoqueId, quantityTotal, photo });
       onDone();
       onClose();
     } catch (err) {
@@ -295,17 +322,30 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
           onChange={(e) => setDescription(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        >
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={estoqueId}
+            onChange={(e) => setEstoqueId(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {estoques.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <label className="text-sm text-slate-600">
           Quantidade total (cautelado + F.A: {item.quantityCheckedOut + item.quantityUnavailable})
           <input

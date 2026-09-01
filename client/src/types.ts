@@ -17,6 +17,12 @@ export interface Category {
   _count?: { items: number };
 }
 
+export interface Estoque {
+  id: string;
+  name: string;
+  _count?: { items: number };
+}
+
 export interface Item {
   id: string;
   name: string;
@@ -24,6 +30,8 @@ export interface Item {
   photo?: string | null;
   categoryId: string;
   category: Category;
+  estoqueId: string;
+  estoque: Estoque;
   quantityTotal: number;
   quantityAvailable: number;
   quantityCheckedOut: number;
@@ -45,4 +53,6 @@ export interface Cautela {
   returnedAt?: string | null;
   returnNotes?: string | null;
   groupId?: string | null;
+  retiradoPorNome?: string | null;
+  retiradoPorTelefone?: string | null;
 }

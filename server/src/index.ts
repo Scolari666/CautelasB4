@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { initSocket } from "./socket";
 import { authRouter } from "./routes/auth.routes";
 import { categoriesRouter } from "./routes/categories.routes";
+import { estoquesRouter } from "./routes/estoques.routes";
 import { itemsRouter } from "./routes/items.routes";
 import { cautelasRouter } from "./routes/cautelas.routes";
 import { usersRouter } from "./routes/users.routes";
@@ -18,6 +19,7 @@ app.use(express.json({ limit: "8mb" }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/categories", categoriesRouter);
+app.use("/api/estoques", estoquesRouter);
 app.use("/api/items", itemsRouter);
 app.use("/api/cautelas", cautelasRouter);
 app.use("/api/users", usersRouter);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, apiErrorMessage } from "../api/client";
-import { Category, Item } from "../types";
+import { Category, Estoque as EstoqueType, Item } from "../types";
 import { ItemCard } from "../components/ItemCard";
 import { Modal } from "../components/Modal";
 import { PhotoInput } from "../components/PhotoInput";
@@ -11,15 +11,23 @@ export function Estoque() {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [estoques, setEstoques] = useState<EstoqueType[]>([]);
+  const [estoqueId, setEstoqueId] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
 
   const load = useCallback(async () => {
-    const [itemsRes, categoriesRes] = await Promise.all([api.get<Item[]>("/items"), api.get<Category[]>("/categories")]);
+    const [itemsRes, categoriesRes, estoquesRes] = await Promise.all([
+      api.get<Item[]>("/items"),
+      api.get<Category[]>("/categories"),
+      api.get<EstoqueType[]>("/estoques"),
+    ]);
     setItems(itemsRes.data);
     setCategories(categoriesRes.data);
+    setEstoques(estoquesRes.data);
+    setEstoqueId((prev) => prev || estoquesRes.data[0]?.id || "");
     setLoading(false);
   }, []);
 
@@ -30,6 +38,7 @@ export function Estoque() {
   useStockSocket(load);
 
   const filtered = items.filter((item) => {
+    if (estoqueId && item.estoqueId !== estoqueId) return false;
     if (categoryFilter && item.categoryId !== categoryFilter) return false;
     if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
@@ -55,6 +64,24 @@ export function Estoque() {
           </button>
         )}
       </div>
+
+      {estoques.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {estoques.map((e) => (
+            <button
+              key={e.id}
+              onClick={() => setEstoqueId(e.id)}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                estoqueId === e.id
+                  ? "bg-brand-700 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              {e.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-3">
         <input
@@ -95,7 +122,13 @@ export function Estoque() {
       )}
 
       {showNew && (
-        <NewItemModal categories={categories} onClose={() => setShowNew(false)} onCreated={load} />
+        <NewItemModal
+          categories={categories}
+          estoques={estoques}
+          defaultEstoqueId={estoqueId}
+          onClose={() => setShowNew(false)}
+          onCreated={load}
+        />
       )}
     </div>
   );
@@ -103,16 +136,21 @@ export function Estoque() {
 
 function NewItemModal({
   categories,
+  estoques,
+  defaultEstoqueId,
   onClose,
   onCreated,
 }: {
   categories: Category[];
+  estoques: EstoqueType[];
+  defaultEstoqueId: string;
   onClose: () => void;
   onCreated: () => void;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
+  const [estoqueId, setEstoqueId] = useState(defaultEstoqueId || estoques[0]?.id || "");
   const [quantityTotal, setQuantityTotal] = useState(1);
   const [photo, setPhoto] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -124,10 +162,14 @@ function NewItemModal({
       setError("Crie uma categoria antes de cadastrar itens");
       return;
     }
+    if (!estoqueId) {
+      setError("Crie um estoque antes de cadastrar itens");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
-      await api.post("/items", { name, description, categoryId, quantityTotal, photo });
+      await api.post("/items", { name, description, categoryId, estoqueId, quantityTotal, photo });
       onCreated();
       onClose();
     } catch (err) {
@@ -154,17 +196,30 @@ function NewItemModal({
           onChange={(e) => setDescription(e.target.value)}
           className="rounded-md border border-slate-300 px-3 py-2 text-sm"
         />
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-        >
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={estoqueId}
+            onChange={(e) => setEstoqueId(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          >
+            {estoques.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <label className="text-sm text-slate-600">
           Quantidade em estoque
           <input

@@ -36,6 +36,13 @@ model Category {
   items     Item[]
 }
 
+model Estoque {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  items     Item[]
+}
+
 model Item {
   id                  String    @id @default(cuid())
   name                String
@@ -43,6 +50,8 @@ model Item {
   photo               String?
   categoryId          String
   category            Category  @relation(fields: [categoryId], references: [id])
+  estoqueId           String
+  estoque             Estoque   @relation(fields: [estoqueId], references: [id])
   quantityTotal       Int       @default(0)
   quantityAvailable   Int       @default(0)
   quantityCheckedOut  Int       @default(0)
@@ -66,6 +75,8 @@ model Cautela {
   returnedAt       DateTime?
   returnNotes      String?
   groupId          String?
+  retiradoPorNome     String?
+  retiradoPorTelefone String?
 
   @@index([groupId])
 }
