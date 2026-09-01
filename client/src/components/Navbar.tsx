@@ -2,8 +2,8 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-2 text-sm font-medium ${
-    isActive ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
+  `rounded-md px-3 py-2 text-sm font-medium transition ${
+    isActive ? "bg-white text-brand-800 shadow-sm" : "text-red-50 hover:bg-white/10"
   }`;
 
 export function Navbar() {
@@ -11,10 +11,14 @@ export function Navbar() {
   if (!user) return null;
 
   return (
-    <nav className="border-b border-slate-200 bg-white">
+    <nav className="border-b-4 border-gold-500 bg-gradient-to-r from-brand-800 via-brand-700 to-brand-800 shadow-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-        <div className="flex items-center gap-1 flex-wrap">
-          <span className="mr-3 text-lg font-bold text-brand-700">CautelasB4</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <img src="/logo-cbmrs.png" alt="Brasão CBMRS" className="h-11 w-11 rounded-md shadow ring-1 ring-white/30" />
+          <div className="mr-2 leading-tight">
+            <p className="text-sm font-bold uppercase tracking-wide text-white">CBMRS</p>
+            <p className="text-[11px] text-gold-100">Cautelas B4</p>
+          </div>
           <NavLink to="/" end className={linkClass}>
             Estoque
           </NavLink>
@@ -35,11 +39,14 @@ export function Navbar() {
             </>
           )}
         </div>
-        <div className="flex items-center gap-3 text-sm text-slate-600">
+        <div className="flex items-center gap-3 text-sm text-red-50">
           <span>
-            {user.name} <span className="text-slate-400">({user.role === "ADMIN" ? "admin" : "usuário"})</span>
+            {user.name} <span className="text-gold-100">({user.role === "ADMIN" ? "admin" : "usuário"})</span>
           </span>
-          <button onClick={logout} className="rounded-md bg-slate-100 px-3 py-1.5 font-medium hover:bg-slate-200">
+          <button
+            onClick={logout}
+            className="rounded-md bg-white/10 px-3 py-1.5 font-medium text-white hover:bg-white/20"
+          >
             Sair
           </button>
         </div>
