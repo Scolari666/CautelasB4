@@ -5,6 +5,8 @@ import { emitStockUpdate } from "../socket";
 
 export const itemsRouter = Router();
 
+const MAX_PHOTO_LENGTH = 2_000_000;
+
 itemsRouter.get("/", requireAuth, async (req, res) => {
   const { categoryId, estoqueId } = req.query;
   const items = await prisma.item.findMany({
@@ -45,6 +47,9 @@ itemsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
   if (!Number.isFinite(qty) || qty < 0) {
     return res.status(400).json({ error: "Quantidade inválida" });
   }
+  if (photo && String(photo).length > MAX_PHOTO_LENGTH) {
+    return res.status(400).json({ error: "Foto muito grande. Escolha uma imagem menor." });
+  }
 
   const item = await prisma.item.create({
     data: {
@@ -66,6 +71,10 @@ itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   const { name, description, photo, categoryId, estoqueId, quantityTotal } = req.body ?? {};
   const current = await prisma.item.findUnique({ where: { id: req.params.id } });
   if (!current) return res.status(404).json({ error: "Item não encontrado" });
+
+  if (photo && String(photo).length > MAX_PHOTO_LENGTH) {
+    return res.status(400).json({ error: "Foto muito grande. Escolha uma imagem menor." });
+  }
 
   const data: Record<string, unknown> = {};
   if (name !== undefined) data.name = name.trim();
