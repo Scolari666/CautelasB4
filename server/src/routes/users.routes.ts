@@ -14,6 +14,7 @@ const USER_SELECT = {
   graduacao: true,
   telefone: true,
   pelotao: true,
+  avatarUrl: true,
   role: true,
   createdAt: true,
 } as const;
@@ -25,7 +26,10 @@ const DIRECTORY_SELECT = {
   telefone: true,
   matricula: true,
   pelotao: true,
+  avatarUrl: true,
 } as const;
+
+const MAX_AVATAR_LENGTH = 3_000_000;
 
 usersRouter.get("/directory", requireAuth, async (_req, res) => {
   const users = await prisma.user.findMany({
@@ -83,6 +87,63 @@ usersRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
     select: USER_SELECT,
   });
   res.status(201).json(user);
+});
+
+usersRouter.patch("/me/password", requireAuth, async (req: AuthedRequest, res) => {
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Senha atual e nova senha são obrigatórias" });
+  }
+  if (String(newPassword).length < 6) {
+    return res.status(400).json({ error: "A nova senha deve ter ao menos 6 caracteres" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+  if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+
+  const valid = await bcrypt.compare(String(currentPassword), user.passwordHash);
+  if (!valid) return res.status(400).json({ error: "Senha atual incorreta" });
+
+  const passwordHash = await bcrypt.hash(String(newPassword), 10);
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+  res.status(204).end();
+});
+
+usersRouter.patch("/me/avatar", requireAuth, async (req: AuthedRequest, res) => {
+  const { avatarUrl } = req.body ?? {};
+  if (avatarUrl === null) {
+    await prisma.user.update({ where: { id: req.user!.userId }, data: { avatarUrl: null } });
+    return res.status(204).end();
+  }
+  if (typeof avatarUrl !== "string" || !avatarUrl.startsWith("data:image/")) {
+    return res.status(400).json({ error: "Foto inválida" });
+  }
+  if (avatarUrl.length > MAX_AVATAR_LENGTH) {
+    return res.status(400).json({ error: "Foto muito grande. Escolha uma imagem menor." });
+  }
+  await prisma.user.update({ where: { id: req.user!.userId }, data: { avatarUrl } });
+  res.status(204).end();
+});
+
+usersRouter.delete("/:id", requireAuth, requireAdmin, async (req: AuthedRequest, res) => {
+  if (req.params.id === req.user!.userId) {
+    return res.status(409).json({ error: "Você não pode excluir sua própria conta" });
+  }
+  try {
+    await prisma.user.delete({ where: { id: req.params.id } });
+    res.status(204).end();
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "P2025") {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+    if (code === "P2003") {
+      return res.status(409).json({
+        error: "Não é possível excluir: este usuário possui cautelas, missões ou pedidos registrados no sistema",
+      });
+    }
+    res.status(500).json({ error: "Erro ao excluir usuário" });
+  }
 });
 
 usersRouter.patch("/:id", requireAuth, requireAdmin, async (req: AuthedRequest, res) => {

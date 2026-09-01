@@ -7,6 +7,7 @@ interface AuthContextValue {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -47,7 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  async function refreshUser() {
+    const res = await api.get<User>("/auth/me");
+    localStorage.setItem("cautelasb4_user", JSON.stringify(res.data));
+    setUser(res.data);
+  }
+
+  return <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

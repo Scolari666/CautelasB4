@@ -39,6 +39,7 @@ model User {
   graduacao    String?
   telefone     String?
   pelotao      String?
+  avatarUrl    String?
   email        String?   @unique
   passwordHash String
   role         Role      @default(USER)

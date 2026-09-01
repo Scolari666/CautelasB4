@@ -27,9 +27,18 @@ export function Navbar() {
           </div>
 
           <div className="hidden items-center gap-3 text-sm text-red-50 md:flex">
-            <span>
-              {user.name} <span className="text-gold-100">({user.role === "ADMIN" ? "admin" : "usuário"})</span>
-            </span>
+            <NavLink to="/perfil" className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-white/10">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover ring-1 ring-white/40" />
+              ) : (
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-xs font-bold text-white ring-1 ring-white/40">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span>
+                {user.name} <span className="text-gold-100">({user.role === "ADMIN" ? "admin" : "usuário"})</span>
+              </span>
+            </NavLink>
             <button
               onClick={logout}
               className="rounded-md bg-white/10 px-3 py-1.5 font-medium text-white hover:bg-white/20"
@@ -69,6 +78,13 @@ export function Navbar() {
           <NavLink to="/missoes-pedidos" className={linkClass} onClick={close}>
             Missões e Pedidos
           </NavLink>
+          <NavLink
+            to="/perfil"
+            className={({ isActive }) => `${linkClass({ isActive })} md:hidden`}
+            onClick={close}
+          >
+            Meu Perfil
+          </NavLink>
 
           {user.role === "ADMIN" && (
             <>
@@ -86,7 +102,14 @@ export function Navbar() {
           )}
 
           <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 pt-2 text-sm text-red-50 md:hidden">
-            <span>
+            <span className="flex items-center gap-2">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover ring-1 ring-white/40" />
+              ) : (
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 text-xs font-bold text-white ring-1 ring-white/40">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              )}
               {user.name} <span className="text-gold-100">({user.role === "ADMIN" ? "admin" : "usuário"})</span>
             </span>
             <button

@@ -35,6 +35,7 @@ authRouter.post("/login", async (req, res) => {
       graduacao: user.graduacao,
       telefone: user.telefone,
       pelotao: user.pelotao,
+      avatarUrl: user.avatarUrl,
     },
   });
 });
@@ -52,5 +53,6 @@ authRouter.get("/me", requireAuth, async (req: AuthedRequest, res) => {
     graduacao: user.graduacao,
     telefone: user.telefone,
     pelotao: user.pelotao,
+    avatarUrl: user.avatarUrl,
   });
 });

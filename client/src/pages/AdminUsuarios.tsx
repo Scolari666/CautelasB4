@@ -31,6 +31,17 @@ export function AdminUsuarios() {
     }
   }
 
+  async function handleDelete(u: User) {
+    if (!confirm(`Excluir o usuário "${u.name}"? Essa ação não pode ser desfeita.`)) return;
+    setError("");
+    try {
+      await api.delete(`/users/${u.id}`);
+      load();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Não foi possível excluir o usuário"));
+    }
+  }
+
   return (
     <div className="max-w-4xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -90,6 +101,13 @@ export function AdminUsuarios() {
                       className="text-xs font-semibold text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
                     >
                       {u.role === "ADMIN" ? "Tornar usuário" : "Tornar admin"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(u)}
+                      disabled={u.id === currentUser?.id}
+                      className="text-xs font-semibold text-red-600 disabled:cursor-not-allowed disabled:text-slate-300"
+                    >
+                      Excluir
                     </button>
                   </div>
                 </td>

@@ -10,6 +10,7 @@ export interface User {
   graduacao?: string | null;
   telefone?: string | null;
   pelotao?: string | null;
+  avatarUrl?: string | null;
   role: Role;
   createdAt?: string;
 }
@@ -21,6 +22,7 @@ export interface UserDirectoryEntry {
   telefone?: string | null;
   matricula?: string | null;
   pelotao?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface Category {
