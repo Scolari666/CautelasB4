@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
+import { generateEstoqueReportPdf } from "../lib/estoqueReportPdf";
 
 export const estoquesRouter = Router();
 
@@ -11,6 +12,22 @@ estoquesRouter.get("/", requireAuth, async (_req, res) => {
     include: { _count: { select: { items: true } } },
   });
   res.json(estoques);
+});
+
+estoquesRouter.get("/:id/pdf", requireAuth, async (req, res) => {
+  const estoque = await prisma.estoque.findUnique({ where: { id: req.params.id } });
+  if (!estoque) return res.status(404).json({ error: "Estoque não encontrado" });
+
+  const items = await prisma.item.findMany({
+    where: { estoqueId: estoque.id },
+    include: { category: true },
+  });
+
+  const pdfBytes = await generateEstoqueReportPdf(estoque, items);
+  const safeName = estoque.name.normalize("NFD").replace(/[^a-zA-Z0-9]+/g, "-");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="materiais-${safeName}.pdf"`);
+  res.send(Buffer.from(pdfBytes));
 });
 
 estoquesRouter.post("/", requireAuth, requireAdmin, async (req, res) => {

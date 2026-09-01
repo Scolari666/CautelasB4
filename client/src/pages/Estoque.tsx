@@ -2,10 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { api, apiErrorMessage } from "../api/client";
 import { Category, Estoque as EstoqueType, Item } from "../types";
 import { ItemCard } from "../components/ItemCard";
+import { ItemListRow } from "../components/ItemListRow";
 import { Modal } from "../components/Modal";
 import { PhotoInput } from "../components/PhotoInput";
 import { useAuth } from "../context/AuthContext";
 import { useStockSocket } from "../hooks/useStockSocket";
+
+type ViewMode = "photos" | "names";
+const VIEW_MODE_KEY = "cautelasb4_materiais_view";
 
 export function Estoque() {
   const { user } = useAuth();
@@ -17,6 +21,38 @@ export function Estoque() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => (localStorage.getItem(VIEW_MODE_KEY) as ViewMode | null) ?? "photos",
+  );
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+
+  function changeViewMode(mode: ViewMode) {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_KEY, mode);
+  }
+
+  async function handleDownloadPdf() {
+    if (!estoqueId) return;
+    setDownloadingPdf(true);
+    setPdfError("");
+    try {
+      const res = await api.get(`/estoques/${estoqueId}/pdf`, { responseType: "blob" });
+      const estoqueName = estoques.find((e) => e.id === estoqueId)?.name ?? "materiais";
+      const url = URL.createObjectURL(res.data as Blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `materiais-${estoqueName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setPdfError(apiErrorMessage(err, "Não foi possível gerar o PDF"));
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
 
   const load = useCallback(async () => {
     const [itemsRes, categoriesRes, estoquesRes] = await Promise.all([
@@ -83,7 +119,7 @@ export function Estoque() {
         </div>
       )}
 
-      <div className="mb-6 flex flex-wrap gap-3">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <input
           placeholder="Buscar item..."
           value={search}
@@ -102,7 +138,35 @@ export function Estoque() {
             </option>
           ))}
         </select>
+
+        <div className="flex overflow-hidden rounded-md border border-slate-300">
+          <button
+            onClick={() => changeViewMode("photos")}
+            className={`px-3 py-2 text-sm font-medium transition ${
+              viewMode === "photos" ? "bg-brand-700 text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Com fotos
+          </button>
+          <button
+            onClick={() => changeViewMode("names")}
+            className={`border-l border-slate-300 px-3 py-2 text-sm font-medium transition ${
+              viewMode === "names" ? "bg-brand-700 text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            Só nomes
+          </button>
+        </div>
+
+        <button
+          onClick={handleDownloadPdf}
+          disabled={!estoqueId || downloadingPdf}
+          className="ml-auto rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+        >
+          {downloadingPdf ? "Gerando PDF..." : "📄 Gerar PDF"}
+        </button>
       </div>
+      {pdfError && <p className="-mt-4 mb-4 text-sm text-red-600">{pdfError}</p>}
 
       {loading ? (
         <p className="text-slate-500">Carregando materiais...</p>
@@ -112,11 +176,19 @@ export function Estoque() {
         Object.entries(grouped).map(([categoryName, categoryItems]) => (
           <section key={categoryName} className="mb-8">
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">{categoryName}</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {categoryItems.map((item) => (
-                <ItemCard key={item.id} item={item} />
-              ))}
-            </div>
+            {viewMode === "photos" ? (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {categoryItems.map((item) => (
+                  <ItemCard key={item.id} item={item} />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                {categoryItems.map((item) => (
+                  <ItemListRow key={item.id} item={item} />
+                ))}
+              </div>
+            )}
           </section>
         ))
       )}
