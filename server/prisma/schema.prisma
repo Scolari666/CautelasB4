@@ -17,6 +17,20 @@ enum CautelaStatus {
   DEVOLVIDA
 }
 
+enum MissaoStatus {
+  PLANEJADA
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+}
+
+enum PedidoStatus {
+  PENDENTE
+  APROVADO
+  RECUSADO
+  ATENDIDO
+}
+
 model User {
   id           String    @id @default(cuid())
   name         String
@@ -30,6 +44,9 @@ model User {
   role         Role      @default(USER)
   createdAt    DateTime  @default(now())
   cautelas     Cautela[]
+  missoesCriadas    Missao[] @relation("MissaoCreatedBy")
+  missoesAtribuidas Missao[] @relation("MissaoAssignedTo")
+  pedidos           Pedido[]
 }
 
 model Category {
@@ -62,6 +79,7 @@ model Item {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   cautelaItems        CautelaItem[]
+  pedidoItems         PedidoItem[]
 }
 
 model Cautela {
@@ -89,4 +107,44 @@ model CautelaItem {
 
   @@index([cautelaId])
   @@index([itemId])
+}
+
+model Missao {
+  id           String       @id @default(cuid())
+  title        String
+  description  String?
+  status       MissaoStatus @default(PLANEJADA)
+  startAt      DateTime?
+  endAt        DateTime?
+  assignedToId String?
+  assignedTo   User?        @relation("MissaoAssignedTo", fields: [assignedToId], references: [id])
+  createdById  String
+  createdBy    User         @relation("MissaoCreatedBy", fields: [createdById], references: [id])
+  createdAt    DateTime     @default(now())
+
+  @@index([assignedToId])
+}
+
+model Pedido {
+  id            String       @id @default(cuid())
+  pelotao       String
+  instrucao     String
+  neededAt      DateTime
+  status        PedidoStatus @default(PENDENTE)
+  notes         String?
+  requestedById String
+  requestedBy   User         @relation(fields: [requestedById], references: [id])
+  createdAt     DateTime     @default(now())
+  items         PedidoItem[]
+}
+
+model PedidoItem {
+  id       String @id @default(cuid())
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  itemId   String
+  item     Item   @relation(fields: [itemId], references: [id])
+  quantity Int
+
+  @@index([pedidoId])
 }

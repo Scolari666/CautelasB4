@@ -74,3 +74,42 @@ export interface Cautela {
   retiradoPorTelefone?: string | null;
   items: CautelaItem[];
 }
+
+export type MissaoStatus = "PLANEJADA" | "EM_ANDAMENTO" | "CONCLUIDA" | "CANCELADA";
+
+export interface Missao {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: MissaoStatus;
+  startAt?: string | null;
+  endAt?: string | null;
+  assignedToId?: string | null;
+  assignedTo?: { id: string; name: string; matricula?: string | null; pelotao?: string | null } | null;
+  createdById: string;
+  createdBy: { id: string; name: string };
+  createdAt: string;
+}
+
+export type PedidoStatus = "PENDENTE" | "APROVADO" | "RECUSADO" | "ATENDIDO";
+
+export interface PedidoItem {
+  id: string;
+  pedidoId: string;
+  itemId: string;
+  item: Item;
+  quantity: number;
+}
+
+export interface Pedido {
+  id: string;
+  pelotao: string;
+  instrucao: string;
+  neededAt: string;
+  status: PedidoStatus;
+  notes?: string | null;
+  requestedById: string;
+  requestedBy: { id: string; name: string; matricula?: string | null; pelotao?: string | null };
+  createdAt: string;
+  items: PedidoItem[];
+}

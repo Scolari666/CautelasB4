@@ -9,6 +9,8 @@ import { estoquesRouter } from "./routes/estoques.routes";
 import { itemsRouter } from "./routes/items.routes";
 import { cautelasRouter } from "./routes/cautelas.routes";
 import { usersRouter } from "./routes/users.routes";
+import { missoesRouter } from "./routes/missoes.routes";
+import { pedidosRouter } from "./routes/pedidos.routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -23,6 +25,8 @@ app.use("/api/estoques", estoquesRouter);
 app.use("/api/items", itemsRouter);
 app.use("/api/cautelas", cautelasRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/missoes", missoesRouter);
+app.use("/api/pedidos", pedidosRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 

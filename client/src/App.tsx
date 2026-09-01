@@ -7,6 +7,7 @@ import { ItemDetail } from "./pages/ItemDetail";
 import { Cautelas } from "./pages/Cautelas";
 import { MinhasCautelas } from "./pages/MinhasCautelas";
 import { Diretorio } from "./pages/Diretorio";
+import { MissoesPedidos } from "./pages/MissoesPedidos";
 import { AdminCategorias } from "./pages/AdminCategorias";
 import { AdminEstoques } from "./pages/AdminEstoques";
 import { AdminUsuarios } from "./pages/AdminUsuarios";
@@ -74,6 +75,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Diretorio />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/missoes-pedidos"
+            element={
+              <ProtectedRoute>
+                <MissoesPedidos />
               </ProtectedRoute>
             }
           />

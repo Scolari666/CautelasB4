@@ -31,6 +31,9 @@ export function Navbar() {
           <NavLink to="/diretorio" className={linkClass}>
             Diretório
           </NavLink>
+          <NavLink to="/missoes-pedidos" className={linkClass}>
+            Missões e Pedidos
+          </NavLink>
           {user.role === "ADMIN" && (
             <>
               <NavLink to="/admin/categorias" className={linkClass}>
