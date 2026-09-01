@@ -33,6 +33,8 @@ authRouter.post("/login", async (req, res) => {
       role: user.role,
       matricula: user.matricula,
       graduacao: user.graduacao,
+      telefone: user.telefone,
+      pelotao: user.pelotao,
     },
   });
 });
@@ -48,5 +50,7 @@ authRouter.get("/me", requireAuth, async (req: AuthedRequest, res) => {
     role: user.role,
     matricula: user.matricula,
     graduacao: user.graduacao,
+    telefone: user.telefone,
+    pelotao: user.pelotao,
   });
 });

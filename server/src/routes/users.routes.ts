@@ -12,9 +12,28 @@ const USER_SELECT = {
   email: true,
   matricula: true,
   graduacao: true,
+  telefone: true,
+  pelotao: true,
   role: true,
   createdAt: true,
 } as const;
+
+const DIRECTORY_SELECT = {
+  id: true,
+  name: true,
+  graduacao: true,
+  telefone: true,
+  matricula: true,
+  pelotao: true,
+} as const;
+
+usersRouter.get("/directory", requireAuth, async (_req, res) => {
+  const users = await prisma.user.findMany({
+    select: DIRECTORY_SELECT,
+    orderBy: { name: "asc" },
+  });
+  res.json(users);
+});
 
 usersRouter.get("/", requireAuth, requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({
@@ -25,7 +44,7 @@ usersRouter.get("/", requireAuth, requireAdmin, async (_req, res) => {
 });
 
 usersRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
-  const { name, username, password, email, matricula, graduacao, role } = req.body ?? {};
+  const { name, username, password, email, matricula, graduacao, telefone, pelotao, role } = req.body ?? {};
   if (!name?.trim() || !username?.trim() || !password) {
     return res.status(400).json({ error: "Nome, usuário e senha são obrigatórios" });
   }
@@ -56,6 +75,8 @@ usersRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
       email: trimmedEmail,
       matricula: matricula?.trim() || null,
       graduacao: graduacao?.trim() || null,
+      telefone: telefone?.trim() || null,
+      pelotao: pelotao?.trim() || null,
       passwordHash,
       role: role === "ADMIN" ? "ADMIN" : "USER",
     },
@@ -65,13 +86,15 @@ usersRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
 });
 
 usersRouter.patch("/:id", requireAuth, requireAdmin, async (req: AuthedRequest, res) => {
-  const { name, username, email, matricula, graduacao } = req.body ?? {};
+  const { name, username, email, matricula, graduacao, telefone, pelotao } = req.body ?? {};
   const data: {
     name?: string;
     username?: string;
     email?: string | null;
     matricula?: string | null;
     graduacao?: string | null;
+    telefone?: string | null;
+    pelotao?: string | null;
   } = {};
 
   if (name !== undefined) {
@@ -99,6 +122,8 @@ usersRouter.patch("/:id", requireAuth, requireAdmin, async (req: AuthedRequest, 
   }
   if (matricula !== undefined) data.matricula = String(matricula).trim() || null;
   if (graduacao !== undefined) data.graduacao = String(graduacao).trim() || null;
+  if (telefone !== undefined) data.telefone = String(telefone).trim() || null;
+  if (pelotao !== undefined) data.pelotao = String(pelotao).trim() || null;
 
   const user = await prisma.user.update({
     where: { id: req.params.id },

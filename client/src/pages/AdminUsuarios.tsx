@@ -51,7 +51,9 @@ export function AdminUsuarios() {
               <th className="px-4 py-2">Nome</th>
               <th className="px-4 py-2">Usuário</th>
               <th className="px-4 py-2">Graduação</th>
+              <th className="px-4 py-2">Pelotão</th>
               <th className="px-4 py-2">Matrícula</th>
+              <th className="px-4 py-2">Telefone</th>
               <th className="px-4 py-2">Papel</th>
               <th className="px-4 py-2"></th>
             </tr>
@@ -62,7 +64,9 @@ export function AdminUsuarios() {
                 <td className="px-4 py-2 font-medium text-slate-800">{u.name}</td>
                 <td className="px-4 py-2 text-slate-600">{u.username}</td>
                 <td className="px-4 py-2">{u.graduacao ?? "-"}</td>
+                <td className="px-4 py-2">{u.pelotao ?? "-"}</td>
                 <td className="px-4 py-2">{u.matricula ?? "-"}</td>
+                <td className="px-4 py-2">{u.telefone ?? "-"}</td>
                 <td className="px-4 py-2">
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -112,7 +116,9 @@ function NewUserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [graduacao, setGraduacao] = useState("");
+  const [pelotao, setPelotao] = useState("");
   const [matricula, setMatricula] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [role, setRole] = useState<Role>("USER");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -122,7 +128,7 @@ function NewUserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =
     setSaving(true);
     setError("");
     try {
-      await api.post("/users", { name, username, password, email, graduacao, matricula, role });
+      await api.post("/users", { name, username, password, email, graduacao, pelotao, matricula, telefone, role });
       onSaved();
       onClose();
     } catch (err) {
@@ -175,9 +181,23 @@ function NewUserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
           <input
+            placeholder="Pelotão"
+            value={pelotao}
+            onChange={(e) => setPelotao(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="flex gap-3">
+          <input
             placeholder="Matrícula"
             value={matricula}
             onChange={(e) => setMatricula(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Telefone"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
@@ -210,7 +230,9 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
   const [username, setUsername] = useState(user.username);
   const [email, setEmail] = useState(user.email ?? "");
   const [graduacao, setGraduacao] = useState(user.graduacao ?? "");
+  const [pelotao, setPelotao] = useState(user.pelotao ?? "");
   const [matricula, setMatricula] = useState(user.matricula ?? "");
+  const [telefone, setTelefone] = useState(user.telefone ?? "");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -219,7 +241,7 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
     setSaving(true);
     setError("");
     try {
-      await api.patch(`/users/${user.id}`, { name, username, email, graduacao, matricula });
+      await api.patch(`/users/${user.id}`, { name, username, email, graduacao, pelotao, matricula, telefone });
       onSaved();
       onClose();
     } catch (err) {
@@ -261,9 +283,23 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
           <input
+            placeholder="Pelotão"
+            value={pelotao}
+            onChange={(e) => setPelotao(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="flex gap-3">
+          <input
             placeholder="Matrícula"
             value={matricula}
             onChange={(e) => setMatricula(e.target.value)}
+            className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+          <input
+            placeholder="Telefone"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </div>

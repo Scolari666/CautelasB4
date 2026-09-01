@@ -8,8 +8,19 @@ export interface User {
   email?: string | null;
   matricula?: string | null;
   graduacao?: string | null;
+  telefone?: string | null;
+  pelotao?: string | null;
   role: Role;
   createdAt?: string;
+}
+
+export interface UserDirectoryEntry {
+  id: string;
+  name: string;
+  graduacao?: string | null;
+  telefone?: string | null;
+  matricula?: string | null;
+  pelotao?: string | null;
 }
 
 export interface Category {

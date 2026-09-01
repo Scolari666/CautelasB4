@@ -28,6 +28,9 @@ export function Navbar() {
           <NavLink to="/minhas-cautelas" className={linkClass}>
             Minhas Cautelas
           </NavLink>
+          <NavLink to="/diretorio" className={linkClass}>
+            Diretório
+          </NavLink>
           {user.role === "ADMIN" && (
             <>
               <NavLink to="/admin/categorias" className={linkClass}>

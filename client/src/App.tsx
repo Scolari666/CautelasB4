@@ -6,6 +6,7 @@ import { Estoque } from "./pages/Estoque";
 import { ItemDetail } from "./pages/ItemDetail";
 import { Cautelas } from "./pages/Cautelas";
 import { MinhasCautelas } from "./pages/MinhasCautelas";
+import { Diretorio } from "./pages/Diretorio";
 import { AdminCategorias } from "./pages/AdminCategorias";
 import { AdminEstoques } from "./pages/AdminEstoques";
 import { AdminUsuarios } from "./pages/AdminUsuarios";
@@ -65,6 +66,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MinhasCautelas />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/diretorio"
+            element={
+              <ProtectedRoute>
+                <Diretorio />
               </ProtectedRoute>
             }
           />

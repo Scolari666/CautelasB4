@@ -23,6 +23,8 @@ model User {
   username     String    @unique
   matricula    String?
   graduacao    String?
+  telefone     String?
+  pelotao      String?
   email        String?   @unique
   passwordHash String
   role         Role      @default(USER)
