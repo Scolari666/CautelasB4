@@ -298,8 +298,8 @@ function NewItemModal({
             type="number"
             min={0}
             required
-            value={quantityTotal}
-            onChange={(e) => setQuantityTotal(Number(e.target.value))}
+            value={quantityTotal === 0 ? "" : quantityTotal}
+            onChange={(e) => setQuantityTotal(e.target.value === "" ? 0 : Number(e.target.value))}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </label>

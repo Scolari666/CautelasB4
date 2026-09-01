@@ -233,8 +233,8 @@ export function AdminImportar() {
                         <input
                           type="number"
                           min={0}
-                          value={row.quantidade}
-                          onChange={(e) => updateRow(row.key, { quantidade: Number(e.target.value) })}
+                          value={row.quantidade === 0 ? "" : row.quantidade}
+                          onChange={(e) => updateRow(row.key, { quantidade: e.target.value === "" ? 0 : Number(e.target.value) })}
                           className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm"
                         />
                       </td>
@@ -242,8 +242,8 @@ export function AdminImportar() {
                         <input
                           type="number"
                           min={0}
-                          value={row.fa}
-                          onChange={(e) => updateRow(row.key, { fa: Number(e.target.value) })}
+                          value={row.fa === 0 ? "" : row.fa}
+                          onChange={(e) => updateRow(row.key, { fa: e.target.value === "" ? 0 : Number(e.target.value) })}
                           className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm"
                         />
                       </td>

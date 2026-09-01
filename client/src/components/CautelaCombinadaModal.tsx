@@ -138,8 +138,8 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
                   min={1}
                   max={selectedItem?.quantityAvailable ?? undefined}
                   required
-                  value={row.quantity}
-                  onChange={(e) => updateRow(index, { quantity: Number(e.target.value) })}
+                  value={row.quantity === 0 ? "" : row.quantity}
+                  onChange={(e) => updateRow(index, { quantity: e.target.value === "" ? 0 : Number(e.target.value) })}
                   className="w-20 rounded-md border border-slate-300 px-2 py-2 text-sm"
                 />
                 {rows.length > 1 && (

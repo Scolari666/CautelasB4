@@ -228,8 +228,8 @@ function CautelarModal({ item, onClose, onDone }: { item: Item; onClose: () => v
             min={1}
             max={item.quantityAvailable}
             required
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
+            value={quantity === 0 ? "" : quantity}
+            onChange={(e) => setQuantity(e.target.value === "" ? 0 : Number(e.target.value))}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
@@ -358,8 +358,8 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
             type="number"
             min={item.quantityCheckedOut + item.quantityUnavailable}
             required
-            value={quantityTotal}
-            onChange={(e) => setQuantityTotal(Number(e.target.value))}
+            value={quantityTotal === 0 ? "" : quantityTotal}
+            onChange={(e) => setQuantityTotal(e.target.value === "" ? 0 : Number(e.target.value))}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
@@ -420,8 +420,8 @@ function AdjustModal({ item, onClose, onDone }: { item: Item; onClose: () => voi
             min={1}
             max={max}
             required
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
+            value={quantity === 0 ? "" : quantity}
+            onChange={(e) => setQuantity(e.target.value === "" ? 0 : Number(e.target.value))}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
