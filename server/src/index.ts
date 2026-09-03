@@ -11,6 +11,7 @@ import { cautelasRouter } from "./routes/cautelas.routes";
 import { usersRouter } from "./routes/users.routes";
 import { missoesRouter } from "./routes/missoes.routes";
 import { pedidosRouter } from "./routes/pedidos.routes";
+import { autosInfracaoRouter } from "./routes/autosInfracao.routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -27,6 +28,7 @@ app.use("/api/cautelas", cautelasRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/missoes", missoesRouter);
 app.use("/api/pedidos", pedidosRouter);
+app.use("/api/autos-infracao", autosInfracaoRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
