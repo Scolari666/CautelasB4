@@ -78,6 +78,9 @@ export function Navbar() {
           <NavLink to="/missoes-pedidos" className={linkClass} onClick={close}>
             Missões e Pedidos
           </NavLink>
+          <NavLink to="/autos-infracao" className={linkClass} onClick={close}>
+            Anexo A
+          </NavLink>
           <NavLink
             to="/perfil"
             className={({ isActive }) => `${linkClass({ isActive })} md:hidden`}

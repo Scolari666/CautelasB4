@@ -115,3 +115,33 @@ export interface Pedido {
   createdAt: string;
   items: PedidoItem[];
 }
+
+export interface AutoInfracao {
+  id: string;
+  numero: string;
+  dataLavratura: string;
+  horario?: string | null;
+
+  razaoSocial?: string | null;
+  nomeFantasia?: string | null;
+  ppciPspci?: string | null;
+  numeroLogradouro?: string | null;
+  logradouro?: string | null;
+  bairro?: string | null;
+  municipio?: string | null;
+  complemento?: string | null;
+
+  infratorRazaoSocial?: string | null;
+  infratorCnpj?: string | null;
+  infratorNome?: string | null;
+  infratorCpf?: string | null;
+  infratorTelefone?: string | null;
+  infratorEmail?: string | null;
+
+  infracoes: string[];
+
+  createdById: string;
+  createdBy: { id: string; name: string; matricula?: string | null; graduacao?: string | null };
+  createdAt: string;
+  updatedAt: string;
+}
