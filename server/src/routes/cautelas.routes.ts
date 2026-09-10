@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { requireAuth, AuthedRequest } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
 import { generateCautelaPdf } from "../lib/cautelaPdf";
+import { canAccessEstoque } from "../lib/location";
 
 const MAX_ITENS_POR_CAUTELA = 12;
 
@@ -10,11 +11,12 @@ export const cautelasRouter = Router();
 
 const CAUTELA_INCLUDE = {
   user: { select: { id: true, name: true, matricula: true } },
-  items: { include: { item: { include: { category: true } } } },
+  items: { include: { item: { include: { category: true, estoque: true } } } },
 } as const;
 
-cautelasRouter.get("/", requireAuth, async (req, res) => {
+cautelasRouter.get("/", requireAuth, async (req: AuthedRequest, res) => {
   const { status, userId, itemId } = req.query;
+  const viewer = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
   const cautelas = await prisma.cautela.findMany({
     where: {
       userId: userId ? String(userId) : undefined,
@@ -25,7 +27,10 @@ cautelasRouter.get("/", requireAuth, async (req, res) => {
     include: CAUTELA_INCLUDE,
     orderBy: { takenAt: "desc" },
   });
-  res.json(cautelas);
+  const visible = cautelas.filter((c) =>
+    c.items.every((ci) => canAccessEstoque(ci.item.estoque.name, viewer?.pelotao, viewer?.role ?? "USER"))
+  );
+  res.json(visible);
 });
 
 cautelasRouter.get("/minhas", requireAuth, async (req: AuthedRequest, res) => {
@@ -60,14 +65,18 @@ cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
     return res.status(400).json({ error: "Cada item só pode aparecer uma vez na mesma cautela" });
   }
 
-  const dbItems = await prisma.item.findMany({ where: { id: { in: itemIds } } });
+  const dbItems = await prisma.item.findMany({ where: { id: { in: itemIds } }, include: { estoque: true } });
   if (dbItems.length !== itemIds.length) {
     return res.status(404).json({ error: "Um ou mais itens não foram encontrados" });
   }
+  const requester = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
   for (const p of parsed) {
     const item = dbItems.find((i) => i.id === p.itemId)!;
     if (item.quantityAvailable < p.quantity) {
       return res.status(409).json({ error: `Apenas ${item.quantityAvailable} unidade(s) disponível(is) para "${item.name}"` });
+    }
+    if (!canAccessEstoque(item.estoque.name, requester?.pelotao, requester?.role ?? "USER")) {
+      return res.status(403).json({ error: `Você não tem acesso aos materiais de "${item.estoque.name}"` });
     }
   }
 

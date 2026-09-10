@@ -8,6 +8,7 @@ import { PhotoInput } from "../components/PhotoInput";
 import { useAuth } from "../context/AuthContext";
 import { useStockSocket } from "../hooks/useStockSocket";
 import { downloadCautelaPdf } from "../utils/downloadCautelaPdf";
+import { canAccessEstoque } from "../constants/location";
 
 export function ItemDetail() {
   const { id } = useParams<{ id: string }>();
@@ -54,6 +55,7 @@ export function ItemDetail() {
 
   const activeCautelas = item.cautelaItems?.filter((ci) => ci.status === "ATIVA") ?? [];
   const history = item.cautelaItems?.filter((ci) => ci.status === "DEVOLVIDA") ?? [];
+  const canCautelar = canAccessEstoque(item.estoque.name, user?.pelotao, user?.role ?? "USER");
 
   return (
     <div>
@@ -91,7 +93,8 @@ export function ItemDetail() {
           <div className="mt-5 flex flex-wrap gap-2">
             <button
               onClick={() => setShowCautelar(true)}
-              disabled={item.quantityAvailable <= 0}
+              disabled={item.quantityAvailable <= 0 || !canCautelar}
+              title={canCautelar ? undefined : "Você não tem acesso a este estoque"}
               className="rounded-md bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-40"
             >
               Cautelar

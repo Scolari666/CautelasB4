@@ -4,11 +4,17 @@ import { Cautela } from "../types";
 import { useStockSocket } from "../hooks/useStockSocket";
 import { CautelaCombinadaModal } from "../components/CautelaCombinadaModal";
 import { CautelaCard } from "../components/CautelaCard";
+import { Location, LOCATION_LABEL, estoqueLocation } from "../constants/location";
 
 const tabClass = (active: boolean) =>
   `rounded-full px-4 py-1.5 text-sm font-semibold transition ${
     active ? "bg-brand-700 text-white shadow-sm" : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50"
   }`;
+
+function cautelaLocation(c: Cautela): Location | null {
+  const name = c.items[0]?.item.estoque?.name;
+  return name ? estoqueLocation(name) : null;
+}
 
 export function Cautelas() {
   const [tab, setTab] = useState<"todas" | "minhas">("todas");
@@ -40,6 +46,12 @@ export function Cautelas() {
 
   const ativas = minhas.filter((c) => c.items.some((i) => i.status === "ATIVA"));
   const devolvidas = minhas.filter((c) => c.items.every((i) => i.status === "DEVOLVIDA"));
+
+  const allSections: { key: Location | "OUTROS"; label: string; cautelas: Cautela[] }[] = (
+    ["POA", "CACHOEIRINHA", "B4"] as Location[]
+  ).map((loc) => ({ key: loc, label: LOCATION_LABEL[loc], cautelas: cautelas.filter((c) => cautelaLocation(c) === loc) }));
+  allSections.push({ key: "OUTROS", label: "Outros materiais", cautelas: cautelas.filter((c) => cautelaLocation(c) === null) });
+  const locationSections = allSections.filter((s) => s.cautelas.length > 0);
 
   return (
     <div>
@@ -79,11 +91,18 @@ export function Cautelas() {
           {cautelas.length === 0 ? (
             <p className="text-slate-500">Nenhuma cautela encontrada.</p>
           ) : (
-            <div className="flex flex-col gap-3">
-              {cautelas.map((c) => (
-                <CautelaCard key={c.id} cautela={c} onChanged={loadTodas} />
-              ))}
-            </div>
+            locationSections.map((section) => (
+              <section key={section.key} className="mb-8">
+                <h3 className="mb-3 border-b border-slate-200 pb-1 text-base font-bold text-slate-700">
+                  {section.label}
+                </h3>
+                <div className="flex flex-col gap-3">
+                  {section.cautelas.map((c) => (
+                    <CautelaCard key={c.id} cautela={c} onChanged={loadTodas} />
+                  ))}
+                </div>
+              </section>
+            ))
           )}
         </div>
       ) : (

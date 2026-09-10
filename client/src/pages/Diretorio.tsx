@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { UserDirectoryEntry } from "../types";
+import { useAuth } from "../context/AuthContext";
 import { PELOTAO_OPTIONS } from "../constants/pelotoes";
+import { Location, LOCATION_LABEL, pelotaoLocation, userLocationAccess } from "../constants/location";
 
 const SEM_PELOTAO = "Sem pelotão";
 
@@ -26,6 +28,7 @@ function pelotaoStyle(name: string) {
 }
 
 export function Diretorio() {
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserDirectoryEntry[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -66,6 +69,59 @@ export function Diretorio() {
     return a.localeCompare(b, "pt-BR");
   });
 
+  const access = userLocationAccess(user?.pelotao, user?.role ?? "USER");
+  const locationGroups: Record<Location, string[]> = { POA: [], CACHOEIRINHA: [], B4: [] };
+  const commonGroups: string[] = [];
+  for (const name of groupNames) {
+    const loc = name === SEM_PELOTAO ? null : pelotaoLocation(name);
+    if (loc) locationGroups[loc].push(name);
+    else commonGroups.push(name);
+  }
+
+  function renderGroup(groupName: string) {
+    const style = pelotaoStyle(groupName);
+    return (
+      <section key={groupName} className={`mb-6 overflow-hidden rounded-xl border border-l-4 border-slate-200 bg-white ${style.border}`}>
+        <h2 className={`flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide ${style.head}`}>
+          <span className={`h-2.5 w-2.5 rounded-full ${style.dot}`} />
+          {groupName} <span className="font-normal normal-case text-slate-400">({grouped[groupName].length})</span>
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-2"></th>
+                <th className="px-4 py-2">Nome</th>
+                <th className="px-4 py-2">Graduação</th>
+                <th className="px-4 py-2">Matrícula</th>
+                <th className="px-4 py-2">Telefone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grouped[groupName].map((u) => (
+                <tr key={u.id} className="border-t border-slate-100">
+                  <td className="px-4 py-2">
+                    {u.avatarUrl ? (
+                      <img src={u.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+                        {u.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 font-medium text-slate-800">{u.name}</td>
+                  <td className="px-4 py-2">{u.graduacao ?? "-"}</td>
+                  <td className="px-4 py-2">{u.matricula ?? "-"}</td>
+                  <td className="px-4 py-2">{u.telefone ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="max-w-4xl">
       <h1 className="mb-4 text-xl font-bold text-slate-800">Diretório</h1>
@@ -82,49 +138,19 @@ export function Diretorio() {
       ) : filtered.length === 0 ? (
         <p className="text-slate-500">Nenhum militar encontrado.</p>
       ) : (
-        groupNames.map((groupName) => {
-          const style = pelotaoStyle(groupName);
-          return (
-            <section key={groupName} className={`mb-6 overflow-hidden rounded-xl border border-l-4 border-slate-200 bg-white ${style.border}`}>
-              <h2 className={`flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide ${style.head}`}>
-                <span className={`h-2.5 w-2.5 rounded-full ${style.dot}`} />
-                {groupName} <span className="font-normal normal-case text-slate-400">({grouped[groupName].length})</span>
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-                    <tr>
-                      <th className="px-4 py-2"></th>
-                      <th className="px-4 py-2">Nome</th>
-                      <th className="px-4 py-2">Graduação</th>
-                      <th className="px-4 py-2">Matrícula</th>
-                      <th className="px-4 py-2">Telefone</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {grouped[groupName].map((u) => (
-                      <tr key={u.id} className="border-t border-slate-100">
-                        <td className="px-4 py-2">
-                          {u.avatarUrl ? (
-                            <img src={u.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
-                          ) : (
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
-                              {u.name.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 font-medium text-slate-800">{u.name}</td>
-                        <td className="px-4 py-2">{u.graduacao ?? "-"}</td>
-                        <td className="px-4 py-2">{u.matricula ?? "-"}</td>
-                        <td className="px-4 py-2">{u.telefone ?? "-"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <>
+          {(["POA", "CACHOEIRINHA"] as Location[])
+            .filter((loc) => access.has(loc) && locationGroups[loc].length > 0)
+            .map((loc) => (
+              <div key={loc} className="mb-8">
+                <h3 className="mb-3 border-b border-slate-200 pb-1 text-base font-bold text-slate-700">
+                  {LOCATION_LABEL[loc]}
+                </h3>
+                {locationGroups[loc].map(renderGroup)}
               </div>
-            </section>
-          );
-        })
+            ))}
+          {commonGroups.map(renderGroup)}
+        </>
       )}
     </div>
   );

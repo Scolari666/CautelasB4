@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthedRequest } from "../middleware/auth";
+import { userLocationAccess, pelotaoLocation } from "../lib/location";
 
 export const usersRouter = Router();
 
@@ -31,12 +32,18 @@ const DIRECTORY_SELECT = {
 
 const MAX_AVATAR_LENGTH = 3_000_000;
 
-usersRouter.get("/directory", requireAuth, async (_req, res) => {
+usersRouter.get("/directory", requireAuth, async (req: AuthedRequest, res) => {
+  const viewer = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
+  const viewerAccess = userLocationAccess(viewer?.pelotao, viewer?.role ?? "USER");
   const users = await prisma.user.findMany({
     select: DIRECTORY_SELECT,
     orderBy: { name: "asc" },
   });
-  res.json(users);
+  const visible = users.filter((u) => {
+    const loc = pelotaoLocation(u.pelotao);
+    return loc === null || viewerAccess.has(loc);
+  });
+  res.json(visible);
 });
 
 usersRouter.get("/", requireAuth, requireAdmin, async (_req, res) => {

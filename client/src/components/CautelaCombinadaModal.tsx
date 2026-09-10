@@ -4,6 +4,7 @@ import { Estoque, Item } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { Modal } from "./Modal";
 import { ItemPickerModal } from "./ItemPickerModal";
+import { canAccessEstoque } from "../constants/location";
 
 interface Row {
   itemId: string;
@@ -29,12 +30,13 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
   useEffect(() => {
     api.get<Item[]>("/items").then((res) => setItems(res.data.filter((i) => i.quantityAvailable > 0)));
     api.get<Estoque[]>("/estoques").then((res) => {
-      setEstoques(res.data);
-      setEstoqueId((prev) => prev || res.data[0]?.id || "");
+      const allowed = res.data.filter((e) => canAccessEstoque(e.name, user?.pelotao, user?.role ?? "USER"));
+      setEstoques(allowed);
+      setEstoqueId((prev) => prev || allowed[0]?.id || "");
     });
-  }, []);
+  }, [user?.pelotao, user?.role]);
 
-  const itemsInEstoque = items.filter((i) => !estoqueId || i.estoqueId === estoqueId);
+  const itemsInEstoque = estoqueId ? items.filter((i) => i.estoqueId === estoqueId) : [];
 
   function updateRow(index: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
@@ -86,6 +88,10 @@ export function CautelaCombinadaModal({ onClose, onDone }: { onClose: () => void
         <p className="text-xs text-slate-500">
           Retire vários materiais de uma só vez — todos saem no mesmo documento de cautela.
         </p>
+
+        {estoques.length === 0 && (
+          <p className="text-sm text-red-600">Você não tem acesso a nenhum estoque para cautelar materiais.</p>
+        )}
 
         {estoques.length > 1 && (
           <label className="text-sm text-slate-600">
