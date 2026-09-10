@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { UserDirectoryEntry } from "../types";
+import { PELOTAO_OPTIONS } from "../constants/pelotoes";
 
 const SEM_PELOTAO = "Sem pelotão";
 
@@ -57,6 +58,11 @@ export function Diretorio() {
   const groupNames = Object.keys(grouped).sort((a, b) => {
     if (a === SEM_PELOTAO) return 1;
     if (b === SEM_PELOTAO) return -1;
+    const indexA = PELOTAO_OPTIONS.indexOf(a);
+    const indexB = PELOTAO_OPTIONS.indexOf(b);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
     return a.localeCompare(b, "pt-BR");
   });
 

@@ -3,6 +3,7 @@ import { api, apiErrorMessage } from "../api/client";
 import { Role, User } from "../types";
 import { useAuth } from "../context/AuthContext";
 import { Modal } from "../components/Modal";
+import { PELOTAO_OPTIONS } from "../constants/pelotoes";
 
 export function AdminUsuarios() {
   const { user: currentUser } = useAuth();
@@ -198,12 +199,18 @@ function NewUserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =
             onChange={(e) => setGraduacao(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
-          <input
-            placeholder="Pelotão"
+          <select
             value={pelotao}
             onChange={(e) => setPelotao(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
+          >
+            <option value="">Sem pelotão</option>
+            {PELOTAO_OPTIONS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-3">
           <input
@@ -300,12 +307,18 @@ function EditUserModal({ user, onClose, onSaved }: { user: User; onClose: () => 
             onChange={(e) => setGraduacao(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
-          <input
-            placeholder="Pelotão"
+          <select
             value={pelotao}
             onChange={(e) => setPelotao(e.target.value)}
             className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
+          >
+            <option value="">Sem pelotão</option>
+            {PELOTAO_OPTIONS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-3">
           <input
