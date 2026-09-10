@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { UserDirectoryEntry } from "../types";
 import { useAuth } from "../context/AuthContext";
@@ -40,6 +40,16 @@ export function Diretorio() {
     });
   }, []);
 
+  const availableLocations = useMemo(() => {
+    const access = userLocationAccess(user?.pelotao, user?.role ?? "USER");
+    return (["POA", "CACHOEIRINHA"] as Location[]).filter((loc) => access.has(loc));
+  }, [user?.pelotao, user?.role]);
+
+  const [location, setLocation] = useState<Location | null>(null);
+  useEffect(() => {
+    setLocation((prev) => (prev && availableLocations.includes(prev) ? prev : availableLocations[0] ?? null));
+  }, [availableLocations]);
+
   const filtered = users.filter((u) => {
     if (!search) return true;
     const term = search.toLowerCase();
@@ -69,14 +79,15 @@ export function Diretorio() {
     return a.localeCompare(b, "pt-BR");
   });
 
-  const access = userLocationAccess(user?.pelotao, user?.role ?? "USER");
-  const locationGroups: Record<Location, string[]> = { POA: [], CACHOEIRINHA: [], B4: [] };
   const commonGroups: string[] = [];
+  const groupsByLocation: Record<Location, string[]> = { POA: [], CACHOEIRINHA: [], B4: [] };
   for (const name of groupNames) {
     const loc = name === SEM_PELOTAO ? null : pelotaoLocation(name);
-    if (loc) locationGroups[loc].push(name);
+    if (loc) groupsByLocation[loc].push(name);
     else commonGroups.push(name);
   }
+
+  const visibleGroups = [...(location ? groupsByLocation[location] : []), ...commonGroups];
 
   function renderGroup(groupName: string) {
     const style = pelotaoStyle(groupName);
@@ -126,6 +137,24 @@ export function Diretorio() {
     <div className="max-w-4xl">
       <h1 className="mb-4 text-xl font-bold text-slate-800">Diretório</h1>
 
+      {availableLocations.length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {availableLocations.map((loc) => (
+            <button
+              key={loc}
+              onClick={() => setLocation(loc)}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                location === loc
+                  ? "bg-brand-700 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              {LOCATION_LABEL[loc]}
+            </button>
+          ))}
+        </div>
+      )}
+
       <input
         placeholder="Buscar por nome, graduação, pelotão ou matrícula..."
         value={search}
@@ -137,20 +166,10 @@ export function Diretorio() {
         <p className="text-slate-500">Carregando...</p>
       ) : filtered.length === 0 ? (
         <p className="text-slate-500">Nenhum militar encontrado.</p>
+      ) : visibleGroups.length === 0 ? (
+        <p className="text-slate-500">Nenhum militar encontrado nesta localidade.</p>
       ) : (
-        <>
-          {(["POA", "CACHOEIRINHA"] as Location[])
-            .filter((loc) => access.has(loc) && locationGroups[loc].length > 0)
-            .map((loc) => (
-              <div key={loc} className="mb-8">
-                <h3 className="mb-3 border-b border-slate-200 pb-1 text-base font-bold text-slate-700">
-                  {LOCATION_LABEL[loc]}
-                </h3>
-                {locationGroups[loc].map(renderGroup)}
-              </div>
-            ))}
-          {commonGroups.map(renderGroup)}
-        </>
+        visibleGroups.map(renderGroup)
       )}
     </div>
   );
