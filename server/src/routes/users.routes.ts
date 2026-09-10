@@ -155,17 +155,19 @@ usersRouter.delete("/:id", requireAuth, requireAdmin, async (req: AuthedRequest,
     }
     res.status(204).end();
   } catch (err) {
+    console.error("Erro ao excluir usuário", req.params.id, force ? "(force)" : "", err);
     const code = (err as { code?: string }).code;
+    const message = err instanceof Error ? err.message : String(err);
     if (code === "P2025") {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
-    if (code === "P2003") {
+    if (code === "P2003" || /foreign key constraint/i.test(message)) {
       return res.status(409).json({
         error: "Não é possível excluir: este usuário possui cautelas, missões ou pedidos registrados no sistema",
         canForce: true,
       });
     }
-    res.status(500).json({ error: "Erro ao excluir usuário" });
+    res.status(500).json({ error: "Erro ao excluir usuário", code, detail: message });
   }
 });
 

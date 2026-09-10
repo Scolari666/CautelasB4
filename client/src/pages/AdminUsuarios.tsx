@@ -32,6 +32,12 @@ export function AdminUsuarios() {
     }
   }
 
+  function deleteErrorMessage(err: unknown) {
+    const data = (err as { response?: { data?: { error?: string; detail?: string } } }).response?.data;
+    const base = apiErrorMessage(err, "Não foi possível excluir o usuário");
+    return data?.detail ? `${base} (${data.detail})` : base;
+  }
+
   async function handleDelete(u: User) {
     if (!confirm(`Excluir o usuário "${u.name}"? Essa ação não pode ser desfeita.`)) return;
     setError("");
@@ -52,13 +58,13 @@ export function AdminUsuarios() {
             load();
             return;
           } catch (err2) {
-            setError(apiErrorMessage(err2, "Não foi possível excluir o usuário"));
+            setError(deleteErrorMessage(err2));
             return;
           }
         }
         return;
       }
-      setError(apiErrorMessage(err, "Não foi possível excluir o usuário"));
+      setError(deleteErrorMessage(err));
     }
   }
 
