@@ -69,9 +69,6 @@ export function Navbar() {
           <NavLink to="/cautelas" className={linkClass} onClick={close}>
             Cautelas
           </NavLink>
-          <NavLink to="/minhas-cautelas" className={linkClass} onClick={close}>
-            Minhas Cautelas
-          </NavLink>
           <NavLink to="/diretorio" className={linkClass} onClick={close}>
             Diretório
           </NavLink>

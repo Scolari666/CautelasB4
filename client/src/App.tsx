@@ -5,7 +5,6 @@ import { Login } from "./pages/Login";
 import { Estoque } from "./pages/Estoque";
 import { ItemDetail } from "./pages/ItemDetail";
 import { Cautelas } from "./pages/Cautelas";
-import { MinhasCautelas } from "./pages/MinhasCautelas";
 import { Diretorio } from "./pages/Diretorio";
 import { Perfil } from "./pages/Perfil";
 import { MissoesPedidos } from "./pages/MissoesPedidos";
@@ -64,14 +63,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/minhas-cautelas"
-            element={
-              <ProtectedRoute>
-                <MinhasCautelas />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/minhas-cautelas" element={<Navigate to="/cautelas" replace />} />
           <Route
             path="/diretorio"
             element={
