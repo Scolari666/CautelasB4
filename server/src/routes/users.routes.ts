@@ -129,8 +129,30 @@ usersRouter.delete("/:id", requireAuth, requireAdmin, async (req: AuthedRequest,
   if (req.params.id === req.user!.userId) {
     return res.status(409).json({ error: "Você não pode excluir sua própria conta" });
   }
+  const force = req.query.force === "true";
   try {
-    await prisma.user.delete({ where: { id: req.params.id } });
+    if (force) {
+      const ativaItems = await prisma.cautelaItem.findMany({
+        where: { cautela: { userId: req.params.id }, status: "ATIVA" },
+      });
+      await prisma.$transaction([
+        ...ativaItems.map((ci) =>
+          prisma.item.update({
+            where: { id: ci.itemId },
+            data: {
+              quantityCheckedOut: { decrement: ci.quantity },
+              quantityAvailable: { increment: ci.quantity },
+            },
+          })
+        ),
+        prisma.cautela.deleteMany({ where: { userId: req.params.id } }),
+        prisma.missao.deleteMany({ where: { createdById: req.params.id } }),
+        prisma.pedido.deleteMany({ where: { requestedById: req.params.id } }),
+        prisma.user.delete({ where: { id: req.params.id } }),
+      ]);
+    } else {
+      await prisma.user.delete({ where: { id: req.params.id } });
+    }
     res.status(204).end();
   } catch (err) {
     const code = (err as { code?: string }).code;
@@ -140,6 +162,7 @@ usersRouter.delete("/:id", requireAuth, requireAdmin, async (req: AuthedRequest,
     if (code === "P2003") {
       return res.status(409).json({
         error: "Não é possível excluir: este usuário possui cautelas, missões ou pedidos registrados no sistema",
+        canForce: true,
       });
     }
     res.status(500).json({ error: "Erro ao excluir usuário" });

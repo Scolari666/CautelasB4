@@ -39,6 +39,25 @@ export function AdminUsuarios() {
       await api.delete(`/users/${u.id}`);
       load();
     } catch (err) {
+      const data = (err as { response?: { data?: { canForce?: boolean } } }).response?.data;
+      if (data?.canForce) {
+        const confirmForce = confirm(
+          `"${u.name}" possui cautelas, missões ou pedidos registrados.\n\n` +
+            `Excluir mesmo assim vai apagar todo esse histórico junto com o usuário e não pode ser desfeito.\n\n` +
+            `Deseja forçar a exclusão?`
+        );
+        if (confirmForce) {
+          try {
+            await api.delete(`/users/${u.id}?force=true`);
+            load();
+            return;
+          } catch (err2) {
+            setError(apiErrorMessage(err2, "Não foi possível excluir o usuário"));
+            return;
+          }
+        }
+        return;
+      }
       setError(apiErrorMessage(err, "Não foi possível excluir o usuário"));
     }
   }
