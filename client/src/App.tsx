@@ -9,8 +9,6 @@ import { MinhasCautelas } from "./pages/MinhasCautelas";
 import { Diretorio } from "./pages/Diretorio";
 import { Perfil } from "./pages/Perfil";
 import { MissoesPedidos } from "./pages/MissoesPedidos";
-import { AutosInfracao } from "./pages/AutosInfracao";
-import { AutoInfracaoForm } from "./pages/AutoInfracaoForm";
 import { AdminCategorias } from "./pages/AdminCategorias";
 import { AdminEstoques } from "./pages/AdminEstoques";
 import { AdminUsuarios } from "./pages/AdminUsuarios";
@@ -87,30 +85,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MissoesPedidos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/autos-infracao"
-            element={
-              <ProtectedRoute>
-                <AutosInfracao />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/autos-infracao/novo"
-            element={
-              <ProtectedRoute>
-                <AutoInfracaoForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/autos-infracao/:id"
-            element={
-              <ProtectedRoute>
-                <AutoInfracaoForm />
               </ProtectedRoute>
             }
           />
