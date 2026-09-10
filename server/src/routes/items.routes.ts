@@ -1,14 +1,16 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requireAdmin, AuthedRequest } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
+import { canAccessEstoque } from "../lib/location";
 
 export const itemsRouter = Router();
 
 const MAX_PHOTO_LENGTH = 2_000_000;
 
-itemsRouter.get("/", requireAuth, async (req, res) => {
+itemsRouter.get("/", requireAuth, async (req: AuthedRequest, res) => {
   const { categoryId, estoqueId } = req.query;
+  const requester = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
   const items = await prisma.item.findMany({
     where: {
       categoryId: categoryId ? String(categoryId) : undefined,
@@ -17,10 +19,11 @@ itemsRouter.get("/", requireAuth, async (req, res) => {
     include: { category: true, estoque: true },
     orderBy: { name: "asc" },
   });
-  res.json(items);
+  const visible = items.filter((i) => canAccessEstoque(i.estoque.name, requester?.pelotao, requester?.role ?? "USER"));
+  res.json(visible);
 });
 
-itemsRouter.get("/:id", requireAuth, async (req, res) => {
+itemsRouter.get("/:id", requireAuth, async (req: AuthedRequest, res) => {
   const item = await prisma.item.findUnique({
     where: { id: req.params.id },
     include: {
@@ -35,6 +38,10 @@ itemsRouter.get("/:id", requireAuth, async (req, res) => {
     },
   });
   if (!item) return res.status(404).json({ error: "Item não encontrado" });
+  const requester = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
+  if (!canAccessEstoque(item.estoque.name, requester?.pelotao, requester?.role ?? "USER")) {
+    return res.status(404).json({ error: "Item não encontrado" });
+  }
   res.json(item);
 });
 

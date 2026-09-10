@@ -1,22 +1,29 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma";
-import { requireAuth, requireAdmin } from "../middleware/auth";
+import { requireAuth, requireAdmin, AuthedRequest } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
 import { generateEstoqueReportPdf } from "../lib/estoqueReportPdf";
+import { canAccessEstoque } from "../lib/location";
 
 export const estoquesRouter = Router();
 
-estoquesRouter.get("/", requireAuth, async (_req, res) => {
+estoquesRouter.get("/", requireAuth, async (req: AuthedRequest, res) => {
+  const requester = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
   const estoques = await prisma.estoque.findMany({
     orderBy: { createdAt: "asc" },
     include: { _count: { select: { items: true } } },
   });
-  res.json(estoques);
+  const visible = estoques.filter((e) => canAccessEstoque(e.name, requester?.pelotao, requester?.role ?? "USER"));
+  res.json(visible);
 });
 
-estoquesRouter.get("/:id/pdf", requireAuth, async (req, res) => {
+estoquesRouter.get("/:id/pdf", requireAuth, async (req: AuthedRequest, res) => {
   const estoque = await prisma.estoque.findUnique({ where: { id: req.params.id } });
   if (!estoque) return res.status(404).json({ error: "Estoque não encontrado" });
+  const requester = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
+  if (!canAccessEstoque(estoque.name, requester?.pelotao, requester?.role ?? "USER")) {
+    return res.status(404).json({ error: "Estoque não encontrado" });
+  }
 
   const items = await prisma.item.findMany({
     where: { estoqueId: estoque.id },

@@ -15,6 +15,7 @@ export function ItemDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [item, setItem] = useState<Item | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState("");
   const [showCautelar, setShowCautelar] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -22,8 +23,12 @@ export function ItemDetail() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    const res = await api.get<Item>(`/items/${id}`);
-    setItem(res.data);
+    try {
+      const res = await api.get<Item>(`/items/${id}`);
+      setItem(res.data);
+    } catch {
+      setNotFound(true);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -51,6 +56,7 @@ export function ItemDetail() {
     }
   }
 
+  if (notFound) return <p className="text-slate-500">Item não encontrado.</p>;
   if (!item) return <p className="text-slate-500">Carregando...</p>;
 
   const activeCautelas = item.cautelaItems?.filter((ci) => ci.status === "ATIVA") ?? [];
