@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api, apiErrorMessage } from "../api/client";
 import { Category, Estoque as EstoqueType, Item } from "../types";
 import { ItemCard } from "../components/ItemCard";
@@ -87,6 +88,10 @@ export function Estoque() {
     return acc;
   }, {});
 
+  const brokenItems = items.filter(
+    (i) => i.quantityAvailable < 0 || i.quantityCheckedOut < 0 || i.quantityUnavailable < 0
+  );
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -100,6 +105,25 @@ export function Estoque() {
           </button>
         )}
       </div>
+
+      {user?.role === "ADMIN" && brokenItems.length > 0 && (
+        <div className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3">
+          <p className="mb-2 text-sm font-semibold text-red-700">
+            ⚠ {brokenItems.length} material(is) com número negativo — precisa corrigir:
+          </p>
+          <ul className="flex flex-col gap-1">
+            {brokenItems.map((i) => (
+              <li key={i.id} className="text-sm text-red-700">
+                <Link to={`/itens/${i.id}`} className="underline hover:no-underline">
+                  {i.name}
+                </Link>{" "}
+                ({i.estoque.name}) — Disponível: {i.quantityAvailable}, Cautelado: {i.quantityCheckedOut}, F.A:{" "}
+                {i.quantityUnavailable}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {estoques.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
