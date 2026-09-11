@@ -11,8 +11,15 @@ const toneClasses: Record<Props["tone"], string> = {
 };
 
 export function StatusBadge({ label, value, tone }: Props) {
+  const broken = value < 0;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${toneClasses[tone]}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+        broken ? "bg-red-600 text-white" : toneClasses[tone]
+      }`}
+      title={broken ? "Valor inválido — use \"Corrigir estoque\" para consertar" : undefined}
+    >
+      {broken && "⚠ "}
       {label}: {value}
     </span>
   );

@@ -20,6 +20,7 @@ export function ItemDetail() {
   const [showCautelar, setShowCautelar] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
+  const [showCorrect, setShowCorrect] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -120,6 +121,12 @@ export function ItemDetail() {
                   Ajustar status
                 </button>
                 <button
+                  onClick={() => setShowCorrect(true)}
+                  className="rounded-md bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                >
+                  Corrigir estoque
+                </button>
+                <button
                   onClick={handleDelete}
                   className="rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
                 >
@@ -192,6 +199,7 @@ export function ItemDetail() {
       {showCautelar && <CautelarModal item={item} onClose={() => setShowCautelar(false)} onDone={load} />}
       {showEdit && <EditItemModal item={item} onClose={() => setShowEdit(false)} onDone={load} />}
       {showAdjust && <AdjustModal item={item} onClose={() => setShowAdjust(false)} onDone={load} />}
+      {showCorrect && <CorrectStockModal item={item} onClose={() => setShowCorrect(false)} onDone={load} />}
     </div>
   );
 }
@@ -441,6 +449,87 @@ function AdjustModal({ item, onClose, onDone }: { item: Item; onClose: () => voi
           className="rounded-md bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
         >
           {saving ? "Salvando..." : "Confirmar ajuste"}
+        </button>
+      </form>
+    </Modal>
+  );
+}
+
+function CorrectStockModal({ item, onClose, onDone }: { item: Item; onClose: () => void; onDone: () => void }) {
+  const [available, setAvailable] = useState(item.quantityAvailable);
+  const [checkedOut, setCheckedOut] = useState(item.quantityCheckedOut);
+  const [unavailable, setUnavailable] = useState(item.quantityUnavailable);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const total = available + checkedOut + unavailable;
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await api.patch(`/items/${item.id}/correct-stock`, {
+        quantityAvailable: available,
+        quantityCheckedOut: checkedOut,
+        quantityUnavailable: unavailable,
+      });
+      onDone();
+      onClose();
+    } catch (err) {
+      setError(apiErrorMessage(err, "Não foi possível corrigir o estoque"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal title={`Corrigir estoque de "${item.name}"`} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <p className="text-xs text-slate-500">
+          Use apenas para corrigir números que ficaram errados (ex: cautelado negativo). Isso substitui os contadores
+          diretamente, sem passar pelo fluxo normal de cautela/devolução.
+        </p>
+        <label className="text-sm text-slate-600">
+          Disponível
+          <input
+            type="number"
+            min={0}
+            value={available === 0 ? "" : available}
+            onChange={(e) => setAvailable(e.target.value === "" ? 0 : Number(e.target.value))}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          Cautelado
+          <input
+            type="number"
+            min={0}
+            value={checkedOut === 0 ? "" : checkedOut}
+            onChange={(e) => setCheckedOut(e.target.value === "" ? 0 : Number(e.target.value))}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="text-sm text-slate-600">
+          F.A
+          <input
+            type="number"
+            min={0}
+            value={unavailable === 0 ? "" : unavailable}
+            onChange={(e) => setUnavailable(e.target.value === "" ? 0 : Number(e.target.value))}
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          />
+        </label>
+        <p className="text-sm text-slate-600">
+          Novo total: <span className="font-semibold text-slate-800">{total}</span>
+        </p>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-md bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+        >
+          {saving ? "Salvando..." : "Salvar correção"}
         </button>
       </form>
     </Modal>

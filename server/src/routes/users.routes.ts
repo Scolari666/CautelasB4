@@ -142,21 +142,26 @@ usersRouter.delete("/:id", requireAuth, requireAdmin, async (req: AuthedRequest,
       const ativaItems = await prisma.cautelaItem.findMany({
         where: { cautela: { userId: req.params.id }, status: "ATIVA" },
       });
-      await prisma.$transaction([
-        ...ativaItems.map((ci) =>
-          prisma.item.update({
+      await prisma.$transaction(async (tx) => {
+        for (const ci of ativaItems) {
+          const claim = await tx.cautelaItem.updateMany({
+            where: { id: ci.id, status: "ATIVA" },
+            data: { status: "DEVOLVIDA", returnedAt: new Date(), returnNotes: "Devolução automática (exclusão forçada de usuário)" },
+          });
+          if (claim.count === 0) continue;
+          await tx.item.update({
             where: { id: ci.itemId },
             data: {
               quantityCheckedOut: { decrement: ci.quantity },
               quantityAvailable: { increment: ci.quantity },
             },
-          })
-        ),
-        prisma.cautela.deleteMany({ where: { userId: req.params.id } }),
-        prisma.missao.deleteMany({ where: { createdById: req.params.id } }),
-        prisma.pedido.deleteMany({ where: { requestedById: req.params.id } }),
-        prisma.user.delete({ where: { id: req.params.id } }),
-      ]);
+          });
+        }
+        await tx.cautela.deleteMany({ where: { userId: req.params.id } });
+        await tx.missao.deleteMany({ where: { createdById: req.params.id } });
+        await tx.pedido.deleteMany({ where: { requestedById: req.params.id } });
+        await tx.user.delete({ where: { id: req.params.id } });
+      });
     } else {
       await prisma.user.delete({ where: { id: req.params.id } });
     }

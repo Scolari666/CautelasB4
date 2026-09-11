@@ -12,6 +12,10 @@ import { usersRouter } from "./routes/users.routes";
 import { missoesRouter } from "./routes/missoes.routes";
 import { pedidosRouter } from "./routes/pedidos.routes";
 
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection (requisição provavelmente falhou, mas o servidor continua no ar):", reason);
+});
+
 const app = express();
 const httpServer = createServer(app);
 initSocket(httpServer);

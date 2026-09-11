@@ -116,7 +116,17 @@ itemsRouter.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
   if (item.quantityCheckedOut > 0) {
     return res.status(409).json({ error: "Não é possível remover item com unidades cauteladas" });
   }
-  await prisma.item.delete({ where: { id: req.params.id } });
+  try {
+    await prisma.item.delete({ where: { id: req.params.id } });
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "P2003") {
+      return res.status(409).json({
+        error: "Não é possível remover: este item possui histórico de cautelas ou pedidos registrado no sistema",
+      });
+    }
+    throw err;
+  }
   emitStockUpdate();
   res.status(204).end();
 });
@@ -141,6 +151,36 @@ itemsRouter.patch("/:id/adjust", requireAuth, requireAdmin, async (req, res) => 
   const updated = await prisma.item.update({
     where: { id: req.params.id },
     data: { [from]: { decrement: qty }, [target]: { increment: qty } },
+    include: { category: true, estoque: true },
+  });
+  emitStockUpdate();
+  res.json(updated);
+});
+
+itemsRouter.patch("/:id/correct-stock", requireAuth, requireAdmin, async (req, res) => {
+  const { quantityAvailable, quantityCheckedOut, quantityUnavailable } = req.body ?? {};
+  const values = { quantityAvailable, quantityCheckedOut, quantityUnavailable };
+  for (const [key, value] of Object.entries(values)) {
+    if (!Number.isFinite(Number(value)) || Number(value) < 0 || !Number.isInteger(Number(value))) {
+      return res.status(400).json({ error: `Valor inválido para "${key}"` });
+    }
+  }
+
+  const item = await prisma.item.findUnique({ where: { id: req.params.id } });
+  if (!item) return res.status(404).json({ error: "Item não encontrado" });
+
+  const available = Number(quantityAvailable);
+  const checkedOut = Number(quantityCheckedOut);
+  const unavailable = Number(quantityUnavailable);
+
+  const updated = await prisma.item.update({
+    where: { id: req.params.id },
+    data: {
+      quantityAvailable: available,
+      quantityCheckedOut: checkedOut,
+      quantityUnavailable: unavailable,
+      quantityTotal: available + checkedOut + unavailable,
+    },
     include: { category: true, estoque: true },
   });
   emitStockUpdate();

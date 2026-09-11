@@ -128,29 +128,34 @@ cautelasRouter.post("/items/:cautelaItemId/devolver", requireAuth, async (req: A
     include: { cautela: true },
   });
   if (!cautelaItem) return res.status(404).json({ error: "Item da cautela não encontrado" });
-  if (cautelaItem.status === "DEVOLVIDA") {
-    return res.status(409).json({ error: "Este item já foi devolvido" });
-  }
   if (cautelaItem.cautela.userId !== req.user!.userId && req.user!.role !== "ADMIN") {
     return res.status(403).json({ error: "Apenas o responsável ou um administrador pode devolver" });
   }
 
   const targetField = toUnavailable ? "quantityUnavailable" : "quantityAvailable";
 
-  const [updated] = await prisma.$transaction([
-    prisma.cautelaItem.update({
-      where: { id: cautelaItem.id },
+  const result = await prisma.$transaction(async (tx) => {
+    const claim = await tx.cautelaItem.updateMany({
+      where: { id: cautelaItem.id, status: "ATIVA" },
       data: { status: "DEVOLVIDA", returnedAt: new Date(), returnNotes: returnNotes?.trim() || null },
-      include: { item: { include: { category: true } } },
-    }),
-    prisma.item.update({
+    });
+    if (claim.count === 0) return null;
+    await tx.item.update({
       where: { id: cautelaItem.itemId },
       data: { quantityCheckedOut: { decrement: cautelaItem.quantity }, [targetField]: { increment: cautelaItem.quantity } },
-    }),
-  ]);
+    });
+    return tx.cautelaItem.findUnique({
+      where: { id: cautelaItem.id },
+      include: { item: { include: { category: true } } },
+    });
+  });
+
+  if (!result) {
+    return res.status(409).json({ error: "Este item já foi devolvido" });
+  }
 
   emitStockUpdate();
-  res.json(updated);
+  res.json(result);
 });
 
 cautelasRouter.post("/:id/devolver", requireAuth, async (req: AuthedRequest, res) => {
@@ -173,17 +178,26 @@ cautelasRouter.post("/:id/devolver", requireAuth, async (req: AuthedRequest, res
   const now = new Date();
   const notes = returnNotes?.trim() || null;
 
-  const ops = pendentes.flatMap((ci) => [
-    prisma.cautelaItem.update({
-      where: { id: ci.id },
-      data: { status: "DEVOLVIDA", returnedAt: now, returnNotes: notes },
-    }),
-    prisma.item.update({
-      where: { id: ci.itemId },
-      data: { quantityCheckedOut: { decrement: ci.quantity }, [targetField]: { increment: ci.quantity } },
-    }),
-  ]);
-  await prisma.$transaction(ops);
+  const anyReturned = await prisma.$transaction(async (tx) => {
+    let returnedAny = false;
+    for (const ci of pendentes) {
+      const claim = await tx.cautelaItem.updateMany({
+        where: { id: ci.id, status: "ATIVA" },
+        data: { status: "DEVOLVIDA", returnedAt: now, returnNotes: notes },
+      });
+      if (claim.count === 0) continue;
+      returnedAny = true;
+      await tx.item.update({
+        where: { id: ci.itemId },
+        data: { quantityCheckedOut: { decrement: ci.quantity }, [targetField]: { increment: ci.quantity } },
+      });
+    }
+    return returnedAny;
+  });
+
+  if (!anyReturned) {
+    return res.status(409).json({ error: "Todos os itens desta cautela já foram devolvidos" });
+  }
 
   const updated = await prisma.cautela.findUnique({ where: { id: cautela.id }, include: CAUTELA_INCLUDE });
   emitStockUpdate();
