@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
 import { signToken } from "../lib/auth";
 import { requireAuth, AuthedRequest } from "../middleware/auth";
+import { userAvatarUrl } from "../lib/photo";
 
 export const authRouter = Router();
 
@@ -35,7 +36,7 @@ authRouter.post("/login", async (req, res) => {
       graduacao: user.graduacao,
       telefone: user.telefone,
       pelotao: user.pelotao,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: userAvatarUrl(user),
     },
   });
 });
@@ -53,6 +54,6 @@ authRouter.get("/me", requireAuth, async (req: AuthedRequest, res) => {
     graduacao: user.graduacao,
     telefone: user.telefone,
     pelotao: user.pelotao,
-    avatarUrl: user.avatarUrl,
+    avatarUrl: userAvatarUrl(user),
   });
 });

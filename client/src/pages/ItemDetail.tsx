@@ -305,6 +305,7 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
   const [estoqueId, setEstoqueId] = useState(item.estoqueId);
   const [quantityTotal, setQuantityTotal] = useState(item.quantityTotal);
   const [photo, setPhoto] = useState<string | null>(item.photo ?? null);
+  const [photoChanged, setPhotoChanged] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [estoques, setEstoques] = useState<Estoque[]>([]);
   const [error, setError] = useState("");
@@ -315,12 +316,24 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
     api.get<Estoque[]>("/estoques").then((res) => setEstoques(res.data));
   }, []);
 
+  function handlePhotoChange(dataUrl: string | null) {
+    setPhoto(dataUrl);
+    setPhotoChanged(true);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError("");
     try {
-      await api.put(`/items/${item.id}`, { name, description, categoryId, estoqueId, quantityTotal, photo });
+      await api.put(`/items/${item.id}`, {
+        name,
+        description,
+        categoryId,
+        estoqueId,
+        quantityTotal,
+        ...(photoChanged ? { photo } : {}),
+      });
       onDone();
       onClose();
     } catch (err) {
@@ -333,7 +346,7 @@ function EditItemModal({ item, onClose, onDone }: { item: Item; onClose: () => v
   return (
     <Modal title="Editar item" onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <PhotoInput value={photo} onChange={setPhoto} />
+        <PhotoInput value={photo} onChange={handlePhotoChange} />
         <input
           required
           value={name}

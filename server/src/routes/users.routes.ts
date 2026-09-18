@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthedRequest } from "../middleware/auth";
 import { userLocationAccess, pelotaoLocation } from "../lib/location";
+import { parseDataUrl, serializeUser } from "../lib/photo";
 
 export const usersRouter = Router();
 
@@ -32,6 +33,15 @@ const DIRECTORY_SELECT = {
 
 const MAX_AVATAR_LENGTH = 3_000_000;
 
+usersRouter.get("/:id/avatar", async (req, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { avatarUrl: true } });
+  const parsed = user?.avatarUrl ? parseDataUrl(user.avatarUrl) : null;
+  if (!parsed) return res.status(404).end();
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  res.setHeader("Content-Type", parsed.contentType);
+  res.send(parsed.buffer);
+});
+
 usersRouter.get("/directory", requireAuth, async (req: AuthedRequest, res) => {
   const viewer = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { pelotao: true, role: true } });
   const viewerAccess = userLocationAccess(viewer?.pelotao, viewer?.role ?? "USER");
@@ -43,7 +53,7 @@ usersRouter.get("/directory", requireAuth, async (req: AuthedRequest, res) => {
     const loc = pelotaoLocation(u.pelotao);
     return loc === null || viewerAccess.has(loc);
   });
-  res.json(visible);
+  res.json(visible.map(serializeUser));
 });
 
 usersRouter.get("/", requireAuth, requireAdmin, async (_req, res) => {
@@ -51,7 +61,7 @@ usersRouter.get("/", requireAuth, requireAdmin, async (_req, res) => {
     select: USER_SELECT,
     orderBy: { name: "asc" },
   });
-  res.json(users);
+  res.json(users.map(serializeUser));
 });
 
 usersRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
@@ -93,7 +103,7 @@ usersRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
     },
     select: USER_SELECT,
   });
-  res.status(201).json(user);
+  res.status(201).json(serializeUser(user));
 });
 
 usersRouter.patch("/me/password", requireAuth, async (req: AuthedRequest, res) => {
@@ -228,7 +238,7 @@ usersRouter.patch("/:id", requireAuth, requireAdmin, async (req: AuthedRequest, 
     data,
     select: USER_SELECT,
   });
-  res.json(user);
+  res.json(serializeUser(user));
 });
 
 usersRouter.patch("/:id/password", requireAuth, requireAdmin, async (req, res) => {
@@ -256,5 +266,5 @@ usersRouter.patch("/:id/role", requireAuth, requireAdmin, async (req: AuthedRequ
     data: { role },
     select: USER_SELECT,
   });
-  res.json(user);
+  res.json(serializeUser(user));
 });

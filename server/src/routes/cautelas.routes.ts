@@ -4,6 +4,7 @@ import { requireAuth, AuthedRequest } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
 import { generateCautelaPdf } from "../lib/cautelaPdf";
 import { canAccessEstoque } from "../lib/location";
+import { serializeWithItems, serializeLineItem } from "../lib/photo";
 
 const MAX_ITENS_POR_CAUTELA = 12;
 
@@ -30,7 +31,7 @@ cautelasRouter.get("/", requireAuth, async (req: AuthedRequest, res) => {
   const visible = cautelas.filter((c) =>
     c.items.every((ci) => canAccessEstoque(ci.item.estoque.name, viewer?.pelotao, viewer?.role ?? "USER"))
   );
-  res.json(visible);
+  res.json(visible.map(serializeWithItems));
 });
 
 cautelasRouter.get("/minhas", requireAuth, async (req: AuthedRequest, res) => {
@@ -39,7 +40,7 @@ cautelasRouter.get("/minhas", requireAuth, async (req: AuthedRequest, res) => {
     include: CAUTELA_INCLUDE,
     orderBy: { takenAt: "desc" },
   });
-  res.json(cautelas);
+  res.json(cautelas.map(serializeWithItems));
 });
 
 cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
@@ -102,7 +103,7 @@ cautelasRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
   });
 
   emitStockUpdate();
-  res.status(201).json(cautela);
+  res.status(201).json(serializeWithItems(cautela));
 });
 
 cautelasRouter.get("/:id/pdf", requireAuth, async (req: AuthedRequest, res) => {
@@ -155,7 +156,7 @@ cautelasRouter.post("/items/:cautelaItemId/devolver", requireAuth, async (req: A
   }
 
   emitStockUpdate();
-  res.json(result);
+  res.json(serializeLineItem(result));
 });
 
 cautelasRouter.post("/:id/devolver", requireAuth, async (req: AuthedRequest, res) => {
@@ -201,5 +202,5 @@ cautelasRouter.post("/:id/devolver", requireAuth, async (req: AuthedRequest, res
 
   const updated = await prisma.cautela.findUnique({ where: { id: cautela.id }, include: CAUTELA_INCLUDE });
   emitStockUpdate();
-  res.json(updated);
+  res.json(serializeWithItems(updated!));
 });

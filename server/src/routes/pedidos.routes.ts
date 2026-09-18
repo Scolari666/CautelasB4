@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { PedidoStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthedRequest } from "../middleware/auth";
+import { serializeWithItems } from "../lib/photo";
 
 export const pedidosRouter = Router();
 
@@ -23,7 +24,7 @@ pedidosRouter.get("/", requireAuth, async (req, res) => {
     include: PEDIDO_INCLUDE,
     orderBy: { neededAt: "asc" },
   });
-  res.json(pedidos);
+  res.json(pedidos.map(serializeWithItems));
 });
 
 pedidosRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
@@ -67,7 +68,7 @@ pedidosRouter.post("/", requireAuth, async (req: AuthedRequest, res) => {
     },
     include: PEDIDO_INCLUDE,
   });
-  res.status(201).json(pedido);
+  res.status(201).json(serializeWithItems(pedido));
 });
 
 pedidosRouter.patch("/:id/status", requireAuth, requireAdmin, async (req, res) => {
@@ -80,7 +81,7 @@ pedidosRouter.patch("/:id/status", requireAuth, requireAdmin, async (req, res) =
     data: { status },
     include: PEDIDO_INCLUDE,
   });
-  res.json(pedido);
+  res.json(serializeWithItems(pedido));
 });
 
 pedidosRouter.delete("/:id", requireAuth, async (req: AuthedRequest, res) => {

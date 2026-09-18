@@ -3,10 +3,20 @@ import { prisma } from "../lib/prisma";
 import { requireAuth, requireAdmin, AuthedRequest } from "../middleware/auth";
 import { emitStockUpdate } from "../socket";
 import { canAccessEstoque } from "../lib/location";
+import { parseDataUrl, serializeItem } from "../lib/photo";
 
 export const itemsRouter = Router();
 
 const MAX_PHOTO_LENGTH = 2_000_000;
+
+itemsRouter.get("/:id/photo", async (req, res) => {
+  const item = await prisma.item.findUnique({ where: { id: req.params.id }, select: { photo: true } });
+  const parsed = item?.photo ? parseDataUrl(item.photo) : null;
+  if (!parsed) return res.status(404).end();
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  res.setHeader("Content-Type", parsed.contentType);
+  res.send(parsed.buffer);
+});
 
 itemsRouter.get("/", requireAuth, async (req: AuthedRequest, res) => {
   const { categoryId, estoqueId } = req.query;
@@ -20,7 +30,7 @@ itemsRouter.get("/", requireAuth, async (req: AuthedRequest, res) => {
     orderBy: { name: "asc" },
   });
   const visible = items.filter((i) => canAccessEstoque(i.estoque.name, requester?.pelotao, requester?.role ?? "USER"));
-  res.json(visible);
+  res.json(visible.map(serializeItem));
 });
 
 itemsRouter.get("/:id", requireAuth, async (req: AuthedRequest, res) => {
@@ -42,7 +52,7 @@ itemsRouter.get("/:id", requireAuth, async (req: AuthedRequest, res) => {
   if (!canAccessEstoque(item.estoque.name, requester?.pelotao, requester?.role ?? "USER")) {
     return res.status(404).json({ error: "Item não encontrado" });
   }
-  res.json(item);
+  res.json(serializeItem(item));
 });
 
 itemsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
@@ -56,6 +66,9 @@ itemsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
   }
   if (photo && String(photo).length > MAX_PHOTO_LENGTH) {
     return res.status(400).json({ error: "Foto muito grande. Escolha uma imagem menor." });
+  }
+  if (photo != null && !String(photo).startsWith("data:image/")) {
+    return res.status(400).json({ error: "Foto inválida" });
   }
 
   const item = await prisma.item.create({
@@ -71,7 +84,7 @@ itemsRouter.post("/", requireAuth, requireAdmin, async (req, res) => {
     include: { category: true, estoque: true },
   });
   emitStockUpdate();
-  res.status(201).json(item);
+  res.status(201).json(serializeItem(item));
 });
 
 itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
@@ -81,6 +94,9 @@ itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   if (photo && String(photo).length > MAX_PHOTO_LENGTH) {
     return res.status(400).json({ error: "Foto muito grande. Escolha uma imagem menor." });
+  }
+  if (photo != null && !String(photo).startsWith("data:image/")) {
+    return res.status(400).json({ error: "Foto inválida" });
   }
 
   const data: Record<string, unknown> = {};
@@ -107,7 +123,7 @@ itemsRouter.put("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   const item = await prisma.item.update({ where: { id: req.params.id }, data, include: { category: true, estoque: true } });
   emitStockUpdate();
-  res.json(item);
+  res.json(serializeItem(item));
 });
 
 itemsRouter.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
@@ -154,7 +170,7 @@ itemsRouter.patch("/:id/adjust", requireAuth, requireAdmin, async (req, res) => 
     include: { category: true, estoque: true },
   });
   emitStockUpdate();
-  res.json(updated);
+  res.json(serializeItem(updated));
 });
 
 itemsRouter.patch("/:id/correct-stock", requireAuth, requireAdmin, async (req, res) => {
@@ -184,5 +200,5 @@ itemsRouter.patch("/:id/correct-stock", requireAuth, requireAdmin, async (req, r
     include: { category: true, estoque: true },
   });
   emitStockUpdate();
-  res.json(updated);
+  res.json(serializeItem(updated));
 });
