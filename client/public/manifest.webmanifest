@@ -1,0 +1,14 @@
+{
+  "name": "Sistema Online para B4",
+  "short_name": "B4 CBMRS",
+  "description": "Controle de materiais e cautelas do CBMRS",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#7f1116",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
